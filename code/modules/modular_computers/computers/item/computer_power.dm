@@ -13,10 +13,10 @@
 
 	if(battery_module && battery_module.battery && battery_module.battery.charge)
 		var/obj/item/stock_parts/cell/cell = battery_module.battery
-		if(cell.use(amount * CELLRATE))
+		if(cell.use(amount * GLOB.CELLRATE))
 			return TRUE
 		else // Discharge the cell anyway.
-			cell.use(min(amount*CELLRATE, cell.charge))
+			cell.use(min(amount*GLOB.CELLRATE, cell.charge))
 			return FALSE
 	return FALSE
 
@@ -26,6 +26,10 @@
 		return battery_module.battery.give(amount)
 	return 0
 
+/obj/item/modular_computer/get_cell()
+	var/obj/item/computer_hardware/battery/battery_module = all_components[MC_CELL]
+	if(battery_module && battery_module.battery)
+		return battery_module.battery
 
 // Used in following function to reduce copypaste
 /obj/item/modular_computer/proc/power_failure()
@@ -55,18 +59,6 @@
 	else
 		power_failure()
 		return FALSE
-
-/obj/item/modular_computer/proc/get_power_eta()
-	var/obj/item/computer_hardware/battery/battery_module = all_components[MC_CELL]
-	if(battery_module && battery_module.battery)
-		var/hours = 0
-		var/minutes = (battery_module.battery.charge) / (last_power_usage / 20) // 20 = obj processing interval
-		if(minutes > 60)
-			hours = minutes/60
-			minutes = (hours - round(hours)) * 60
-		var/seconds = (minutes - round(minutes)) * 60
-		return list("hours" = hours, "minutes" = minutes, "seconds" = seconds)
-	return list()
 
 // Used by child types if they have other power source than battery or recharger
 /obj/item/modular_computer/proc/check_power_override()

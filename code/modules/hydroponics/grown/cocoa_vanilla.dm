@@ -16,7 +16,7 @@
 	icon_dead = "cocoapod-dead"
 	genes = list(/datum/plant_gene/trait/repeated_harvest)
 	mutatelist = list(/obj/item/seeds/cocoapod/vanillapod)
-	reagents_add = list("cocoa" = 0.25, "plantmatter" = 0.1)
+	reagents_add = list("cocoa" = 0.25, "nutriment" = 0.1)
 
 /obj/item/reagent_containers/food/snacks/grown/cocoapod
 	seed = /obj/item/seeds/cocoapod
@@ -25,6 +25,8 @@
 	icon_state = "cocoapod"
 	filling_color = "#FFD700"
 	bitesize_mod = 2
+	foodtype = FRUIT
+	tastes = list("cocoa" = 1)
 	distill_reagent = "creme_de_cacao"
 
 // Vanilla Pod
@@ -37,7 +39,7 @@
 	product = /obj/item/reagent_containers/food/snacks/grown/vanillapod
 	genes = list(/datum/plant_gene/trait/repeated_harvest)
 	mutatelist = list()
-	reagents_add = list("vanilla" = 0.25, "plantmatter" = 0.1)
+	reagents_add = list("vanilla" = 0.25, "nutriment" = 0.1)
 
 /obj/item/reagent_containers/food/snacks/grown/vanillapod
 	seed = /obj/item/seeds/cocoapod/vanillapod
@@ -45,4 +47,6 @@
 	desc = "Fattening... Mmmmm... vanilla."
 	icon_state = "vanillapod"
 	filling_color = "#FFD700"
+	foodtype = FRUIT
+	tastes = list("vanilla" = 1)
 	distill_reagent = "vanilla" //Takes longer, but you can get even more vanilla from it.

@@ -1,72 +1,70 @@
-#pretending we're C because otherwise ruby will initialize, even with "language: dm".
 language: generic
 sudo: false
+branches:
+  except:
+  - ___TGS3TempBranch
+  - ___TGSTempBranch
+matrix:
+  include:
+    - env:
+      - BUILD_TOOLS=true
+      name: "Build Tools"
+      addons:
+        apt:
+          packages:
+            - python3
+            - python3-pip
+      cache:
+        directories:
+          - tgui/node_modules
+    - env:
+      - BUILD_TESTING=true
+      - BUILD_TOOLS=false
+      name: "Build All Maps"
+      addons:
+        apt:
+          packages:
+            - libstdc++6:i386
+      cache:
+        directories:
+          - $HOME/BYOND
+    - env:
+      - BUILD_TESTING=false
+      - BUILD_TOOLS=false
+      name: "Build and Run Unit Tests"
+      addons:
+        mariadb: '10.2'
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - libstdc++6:i386
+            - libssl-dev:i386
+            - gcc-multilib
+            - g++-7
+            - g++-7-multilib
+            - libmariadbclient-dev:i386
+      cache:
+        directories:
+          - $HOME/.cargo
+          - $HOME/BYOND
+          - $HOME/MariaDB
+          - $HOME/.rustup
 
-git:
-  depth: 1
-
-cache:
-  directories:
-    - $HOME/BYOND-${BYOND_MAJOR}.${BYOND_MINOR}
-
-addons:
-  apt:
-    packages:
-      - libc6-i386
-      - libgcc1:i386
-      - libstdc++6:i386
-
-env:
-  global:
-    - BYOND_MAJOR="512"
-    - BYOND_MINOR="1454"
-    - BYOND_MACRO_COUNT=4
-  matrix:
-    - DM_MAPFILE="cyberiad"
-    - DM_MAPFILE="metastation"
-    - DM_MAPFILE="delta"
-    - DM_MAPFILE="test_all_maps"
-
-stages:
-  - File Checks
-  - test
+install:
+  - tools/travis/install_build_tools.sh
+  - if [ $BUILD_TOOLS = false ] && [ $BUILD_TESTING = false ]; then mysql -u root -e 'CREATE DATABASE tg_travis;'; fi
+  - if [ $BUILD_TOOLS = false ] && [ $BUILD_TESTING = false ]; then mysql -u root tg_travis < SQL/tgstation_schema.sql; fi
+  - if [ $BUILD_TOOLS = false ] && [ $BUILD_TESTING = false ]; then mysql -u root -e 'CREATE DATABASE tg_travis_prefixed;'; fi
+  - if [ $BUILD_TOOLS = false ] && [ $BUILD_TESTING = false ]; then mysql -u root tg_travis_prefixed < SQL/tgstation_schema_prefixed.sql; fi
 
 before_script:
-  - chmod +x ./install-byond.sh
-  - ./install-byond.sh
+  - tools/travis/before_build_tools.sh
+  - tools/travis/before_build_byond.sh
+
 script:
-  - source $HOME/BYOND-${BYOND_MAJOR}.${BYOND_MINOR}/byond/bin/byondsetup
-  - bash dm.sh -M${DM_MAPFILE} paradise.dme
+  - tools/travis/check_filedirs.sh tgstation.dme
+  - tools/travis/build_tools.sh || travis_terminate 1
+  - tools/travis/build_dependencies.sh || travis_terminate 1
+  - tools/travis/build_byond.sh
 
-jobs:
-  include:
-    # Basic styling/functionality checks
-    - stage: File Checks
-      env:
-      addons:
-      install:
-        - pip install --user PyYaml -q
-        - pip install --user beautifulsoup4 -q
-      before_script: skip
-      script:
-        - shopt -s globstar
-        - (! grep 'step_[xy]' _maps/map_files/**/*.dmm)
-        - (num=$(grep -Ern '\\(red|blue|green|black|italic|bold|b|i[^mc])' code/ | wc -l); echo "$num BYOND text macros (expecting ${BYOND_MACRO_COUNT} or fewer)"; [ $num -le ${BYOND_MACRO_COUNT} ])
-        - md5sum -c - <<< "6dc1b6bf583f3bd4176b6df494caa5f1 *html/changelogs/example.yml"
-        - python tools/ss13_genchangelog.py html/changelog.html html/changelogs
-
-    # Compile NanoUI to make sure it works
-    - stage: NanoUI
-      language: node_js
-      node_js:
-        - "9"
-      env:
-      addons:
-      before_install:
-        - npm install -g gulp-cli
-        - cd ./nano/
-      install:
-        - npm install --loglevel=error
-      before_script:
-      script:
-        - gulp

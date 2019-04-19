@@ -1,20 +1,13 @@
 /obj/machinery/computer/camera_advanced/shuttle_docker
 	name = "navigation computer"
 	desc = "Used to designate a precise transit location for a spacecraft."
-	icon_screen = "navigation"
-	icon_keyboard = "med_key"
 	jump_action = null
 	var/datum/action/innate/shuttledocker_rotate/rotate_action = new
 	var/datum/action/innate/shuttledocker_place/place_action = new
 	var/shuttleId = ""
 	var/shuttlePortId = ""
 	var/shuttlePortName = "custom location"
-	var/list/jumpto_ports = list() //list of ports to jump to
-	var/access_station = TRUE //can we park near X?
-	var/access_tcomms = TRUE
-	var/access_construction = TRUE
-	var/access_mining = TRUE
-	var/access_derelict = FALSE
+	var/list/jumpto_ports = list() //hashset of ports to jump to and ignore for collision purposes
 	var/obj/docking_port/stationary/my_port //the custom docking port placed by this console
 	var/obj/docking_port/mobile/shuttle_port //the mobile docking port of the connected shuttle
 	var/view_range = 7
@@ -24,26 +17,26 @@
 	var/see_hidden = FALSE
 	var/designate_time = 0
 	var/turf/designating_target_loc
+	var/jammed = FALSE
 
 /obj/machinery/computer/camera_advanced/shuttle_docker/Initialize()
 	. = ..()
 	GLOB.navigation_computers += src
-	if(access_station)
-		jumpto_ports += list("nav_z1" = 1)
-	if(access_tcomms)
-		jumpto_ports += list("nav_z3" = 1)
-	if(access_construction)
-		jumpto_ports += list("nav_z4" = 1)
-	if(access_mining)
-		jumpto_ports += list("nav_z5" = 1)
-	if(access_derelict)
-		jumpto_ports += list("nav_z6" = 1)
+	for(var/V in SSshuttle.stationary)
+		if(!V)
+			continue
+		var/obj/docking_port/stationary/S = V
+		if(jumpto_ports[S.id])
+			z_lock |= S.z
 
 /obj/machinery/computer/camera_advanced/shuttle_docker/Destroy()
 	. = ..()
 	GLOB.navigation_computers -= src
 
 /obj/machinery/computer/camera_advanced/shuttle_docker/attack_hand(mob/user)
+	if(jammed)
+		to_chat(user, "<span class='warning'>The Syndicate is jamming the console!</span>")
+		return
 	if(!shuttle_port && !SSshuttle.getShuttle(shuttleId))
 		to_chat(user,"<span class='warning'>Warning: Shuttle connection severed!</span>")
 		return
@@ -53,13 +46,12 @@
 	if(jumpto_ports.len)
 		jump_action = new /datum/action/innate/camera_jump/shuttle_docker
 	..()
-	/* 	//technically working but some icons are buggy as shit and either don't rotate or rotate wrong :
-		//namely shuttle walls, shuttle windows, shuttle engines and buckled mobs
+
 	if(rotate_action)
 		rotate_action.target = user
 		rotate_action.Grant(user)
 		actions += rotate_action
-	*/
+
 	if(place_action)
 		place_action.target = user
 		place_action.Grant(user)
@@ -100,7 +92,7 @@
 			to_add += SSshuttle.hidden_shuttle_turf_images
 
 		user.client.images += to_add
-		user.client.SetView(view_range)
+		user.client.change_view(view_range)
 
 /obj/machinery/computer/camera_advanced/shuttle_docker/remove_eye_control(mob/living/user)
 	..()
@@ -113,7 +105,7 @@
 			to_remove += SSshuttle.hidden_shuttle_turf_images
 
 		user.client.images -= to_remove
-		user.client.SetView(7)
+		user.client.change_view(CONFIG_GET(string/default_view))
 
 /obj/machinery/computer/camera_advanced/shuttle_docker/proc/placeLandingSpot()
 	if(designating_target_loc || !current_user)
@@ -150,7 +142,6 @@
 		my_port.dheight = shuttle_port.dheight
 		my_port.dwidth = shuttle_port.dwidth
 		my_port.hidden = shuttle_port.hidden
-		my_port.register()
 	my_port.setDir(the_eye.dir)
 	my_port.forceMove(locate(eyeobj.x - x_offset, eyeobj.y - y_offset, eyeobj.z))
 	if(current_user.client)
@@ -198,6 +189,8 @@
 	var/turf/eyeturf = get_turf(the_eye)
 	if(!eyeturf)
 		return SHUTTLE_DOCKER_BLOCKED
+	if(z_lock.len && !(eyeturf.z in z_lock))
+		return SHUTTLE_DOCKER_BLOCKED
 
 	. = SHUTTLE_DOCKER_LANDING_CLEAR
 	var/list/bounds = shuttle_port.return_coords(the_eye.x - x_offset, the_eye.y - y_offset, the_eye.dir)
@@ -236,16 +229,13 @@
 
 	if(space_turfs_only)
 		var/turf_type = hidden_turf_info ? hidden_turf_info[2] : T.type
-		if(!ispath(turf_type, /turf/space))
+		if(!ispath(turf_type, /turf/open/space))
 			return SHUTTLE_DOCKER_BLOCKED
-
-	if(istype(T.loc.type, /area/syndicate_depot))
-		return SHUTTLE_DOCKER_BLOCKED
 
 	// Checking for overlapping dock boundaries
 	for(var/i in 1 to overlappers.len)
 		var/obj/docking_port/port = overlappers[i]
-		if(port == my_port || locate(port) in jumpto_ports)
+		if(port == my_port)
 			continue
 		var/port_hidden = !see_hidden && port.hidden
 		var/list/overlap = overlappers[port]
@@ -262,7 +252,7 @@
 		current_user.client.images -= remove_images
 		current_user.client.images += add_images
 
-/obj/machinery/computer/camera_advanced/shuttle_docker/proc/connect_to_shuttle(obj/docking_port/mobile/port, obj/docking_port/stationary/dock, idnum, override=FALSE)
+/obj/machinery/computer/camera_advanced/shuttle_docker/connect_to_shuttle(obj/docking_port/mobile/port, obj/docking_port/stationary/dock, idnum, override=FALSE)
 	if(port && (shuttleId == initial(shuttleId) || override))
 		shuttleId = port.id
 		shuttlePortId = "[port.id]_custom"
@@ -271,8 +261,7 @@
 
 /mob/camera/aiEye/remote/shuttle_docker
 	visible_icon = FALSE
-	use_static = FALSE
-	simulated = FALSE
+	use_static = USE_STATIC_NONE
 	var/list/placement_images = list()
 	var/list/placed_images = list()
 
@@ -281,16 +270,14 @@
 	return ..()
 
 /mob/camera/aiEye/remote/shuttle_docker/setLoc(T)
-	if(istype(get_turf(T), /turf/space) || istype(get_area(T), /area/space) || istype(get_area(T), /area/shuttle))
-		..()
-		var/obj/machinery/computer/camera_advanced/shuttle_docker/console = origin
-		console.checkLandingSpot()
-		return
-	else
-		return
+	..()
+	var/obj/machinery/computer/camera_advanced/shuttle_docker/console = origin
+	console.checkLandingSpot()
 
 /mob/camera/aiEye/remote/shuttle_docker/update_remote_sight(mob/living/user)
-	user.sight = SEE_TURFS
+	user.sight = BLIND|SEE_TURFS
+	user.lighting_alpha = LIGHTING_PLANE_ALPHA_INVISIBLE
+	user.sync_lighting_plane_alpha()
 	return TRUE
 
 /datum/action/innate/shuttledocker_rotate
@@ -337,6 +324,8 @@
 		if(!V)
 			continue
 		var/obj/docking_port/stationary/S = V
+		if(console.z_lock.len && !(S.z in console.z_lock))
+			continue
 		if(console.jumpto_ports[S.id])
 			L[S.name] = S
 
@@ -351,5 +340,7 @@
 			playsound(console, 'sound/machines/terminal_prompt_confirm.ogg', 25, 0)
 			remote_eye.setLoc(T)
 			to_chat(target, "<span class='notice'>Jumped to [selected]</span>")
+			C.overlay_fullscreen("flash", /obj/screen/fullscreen/flash/static)
+			C.clear_fullscreen("flash", 3)
 	else
 		playsound(console, 'sound/machines/terminal_prompt_deny.ogg', 25, 0)

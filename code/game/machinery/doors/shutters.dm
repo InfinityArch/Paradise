@@ -6,7 +6,6 @@
 	layer = SHUTTER_LAYER
 	closingLayer = SHUTTER_LAYER
 	damage_deflection = 20
-	dir = EAST
 
 /obj/machinery/door/poddoor/shutters/preopen
 	icon_state = "open"

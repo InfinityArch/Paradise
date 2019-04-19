@@ -1,55 +1,138 @@
 // Areas.dm
 
-// ===
+
 /area
+	level = null
+	name = "Space"
+	icon = 'icons/turf/areas.dmi'
+	icon_state = "unknown"
+	layer = AREA_LAYER
+	plane = BLACKNESS_PLANE //Keeping this on the default plane, GAME_PLANE, will make area overlays fail to render on FLOOR_PLANE.
+	mouse_opacity = MOUSE_OPACITY_TRANSPARENT
+	invisibility = INVISIBILITY_LIGHTING
+
+	var/map_name // Set in New(); preserves the name set by the map maker, even if renamed by the Blueprints.
+
+	var/valid_territory = TRUE // If it's a valid territory for gangs to claim
+	var/blob_allowed = TRUE // Does it count for blobs score? By default, all areas count.
+	var/clockwork_warp_allowed = TRUE // Can servants warp into this area from Reebe?
+	var/clockwork_warp_fail = "The structure there is too dense for warping to pierce. (This is normal in high-security areas.)"
+
+	var/fire = null
+	var/atmos = TRUE
+	var/atmosalm = FALSE
+	var/poweralm = TRUE
+	var/lightswitch = TRUE
+
+	var/requires_power = TRUE
+	var/always_unpowered = FALSE	// This gets overridden to 1 for space in area/Initialize().
+
+	var/outdoors = FALSE //For space, the asteroid, lavaland, etc. Used with blueprints to determine if we are adding a new area (vs editing a station room)
+
+	var/areasize = 0 //Size of the area in open turfs, only calculated for indoors areas.
+
+	var/power_equip = TRUE
+	var/power_light = TRUE
+	var/power_environ = TRUE
+	var/used_equip = 0
+	var/used_light = 0
+	var/used_environ = 0
+	var/static_equip
+	var/static_light = 0
+	var/static_environ
+
+	var/has_gravity = 0
+	var/noteleport = FALSE			//Are you forbidden from teleporting to the area? (centcom, mobs, wizard, hand teleporter)
+	var/hidden = FALSE 			//Hides area from player Teleport function.
+	var/safe = FALSE 				//Is the area teleport-safe: no space / radiation / aggresive mobs / other dangers
+	/// If false, loading multiple maps with this area type will create multiple instances.
+	var/unique = TRUE
+
+	var/no_air = null
+
+	var/parallax_movedir = 0
+
 	var/global/global_uid = 0
 	var/uid
-	var/list/ambientsounds = list('sound/ambience/ambigen1.ogg','sound/ambience/ambigen3.ogg',\
-								'sound/ambience/ambigen4.ogg','sound/ambience/ambigen5.ogg',\
-								'sound/ambience/ambigen6.ogg','sound/ambience/ambigen7.ogg',\
-								'sound/ambience/ambigen8.ogg','sound/ambience/ambigen9.ogg',\
-								'sound/ambience/ambigen10.ogg','sound/ambience/ambigen11.ogg',\
-								'sound/ambience/ambigen12.ogg','sound/ambience/ambigen14.ogg')
+	var/list/ambientsounds = GENERIC
+	flags_1 = CAN_BE_DIRTY_1
 
-	// This var is used with the maploader (modules/awaymissions/maploader/reader.dm)
-	// if this is 1, when used in a map snippet, this will instantiate a unique
-	// area from any other instances already present (meaning you can have
-	// separate APCs, and so on)
-	var/there_can_be_many = 0
+	var/list/firedoors
+	var/list/cameras
+	var/list/firealarms
+	var/firedoors_last_closed_on = 0
+	var/xenobiology_compatible = FALSE //Can the Xenobio management console transverse this area by default?
+	var/list/canSmoothWithAreas //typecache to limit the areas that atoms in this area can smooth with
 
+/*Adding a wizard area teleport list because motherfucking lag -- Urist*/
+/*I am far too lazy to make it a proper list of areas so I'll just make it run the usual telepot routine at the start of the game*/
+GLOBAL_LIST_EMPTY(teleportlocs)
+
+/proc/process_teleport_locs()
+	for(var/V in GLOB.sortedAreas)
+		var/area/AR = V
+		if(istype(AR, /area/shuttle) || AR.noteleport)
+			continue
+		if(GLOB.teleportlocs[AR.name])
+			continue
+		if (!AR.contents.len)
+			continue
+		var/turf/picked = AR.contents[1]
+		if (picked && is_station_level(picked.z))
+			GLOB.teleportlocs[AR.name] = AR
+
+	sortTim(GLOB.teleportlocs, /proc/cmp_text_dsc)
+
+// ===
 
 /area/New()
+	// This interacts with the map loader, so it needs to be set immediately
+	// rather than waiting for atoms to initialize.
+	if (unique)
+		GLOB.areas_by_type[type] = src
+	return ..()
 
-	..()
+/area/Initialize()
 	icon_state = ""
 	layer = AREA_LAYER
 	uid = ++global_uid
-	GLOB.all_areas += src
 	map_name = name // Save the initial (the name set in the map) name of the area.
+	canSmoothWithAreas = typecacheof(canSmoothWithAreas)
 
-	if(type == /area)	// override defaults for space. TODO: make space areas of type /area/space rather than /area
-		requires_power = 1
-		always_unpowered = 1
-		dynamic_lighting = 1
-		power_light = 0
-		power_equip = 0
-		power_environ = 0
-//		lighting_state = 4
-		//has_gravity = 0    // Space has gravity.  Because.. because.
+	if(requires_power)
+		luminosity = 0
+	else
+		power_light = TRUE
+		power_equip = TRUE
+		power_environ = TRUE
 
-	if(requires_power != 0)
-		power_light = 0			//rastaf0
-		power_equip = 0			//rastaf0
-		power_environ = 0		//rastaf0
+		if(dynamic_lighting == DYNAMIC_LIGHTING_FORCED)
+			dynamic_lighting = DYNAMIC_LIGHTING_ENABLED
+			luminosity = 0
+		else if(dynamic_lighting != DYNAMIC_LIGHTING_IFSTARLIGHT)
+			dynamic_lighting = DYNAMIC_LIGHTING_DISABLED
+	if(dynamic_lighting == DYNAMIC_LIGHTING_IFSTARLIGHT)
+		dynamic_lighting = CONFIG_GET(flag/starlight) ? DYNAMIC_LIGHTING_ENABLED : DYNAMIC_LIGHTING_DISABLED
+
+	. = ..()
 
 	blend_mode = BLEND_MULTIPLY // Putting this in the constructor so that it stops the icons being screwed up in the map editor.
 
-/area/Initialize()
-	. = ..()
+	if(!IS_DYNAMIC_LIGHTING(src))
+		add_overlay(/obj/effect/fullbright)
 
+	reg_in_areas_in_z()
+
+	return INITIALIZE_HINT_LATELOAD
+
+/area/LateInitialize()
+	power_change()		// all machines set to current power level, also updates icon
+
+/area/proc/reg_in_areas_in_z()
 	if(contents.len)
-		var/list/areas_in_z = space_manager.areas_in_z
+		var/list/areas_in_z = SSmapping.areas_in_z
 		var/z
+		update_areasize()
 		for(var/i in 1 to contents.len)
 			var/atom/thing = contents[i]
 			if(!thing)
@@ -63,158 +146,201 @@
 			areas_in_z["[z]"] = list()
 		areas_in_z["[z]"] += src
 
-	return INITIALIZE_HINT_LATELOAD
+/area/Destroy()
+	if(GLOB.areas_by_type[type] == src)
+		GLOB.areas_by_type[type] = null
+	STOP_PROCESSING(SSobj, src)
+	return ..()
 
-/area/LateInitialize()
-	. = ..()
-	power_change()		// all machines set to current power level, also updates lighting icon
+/area/proc/poweralert(state, obj/source)
+	if (state != poweralm)
+		poweralm = state
+		if(istype(source))	//Only report power alarms on the z-level where the source is located.
+			for (var/item in GLOB.silicon_mobs)
+				var/mob/living/silicon/aiPlayer = item
+				if (state == 1)
+					aiPlayer.cancelAlarm("Power", src, source)
+				else
+					aiPlayer.triggerAlarm("Power", src, cameras, source)
 
-/area/proc/get_cameras()
-	var/list/cameras = list()
-	for(var/obj/machinery/camera/C in src)
-		cameras += C
-	return cameras
+			for (var/item in GLOB.alert_consoles)
+				var/obj/machinery/computer/station_alert/a = item
+				if(state == 1)
+					a.cancelAlarm("Power", src, source)
+				else
+					a.triggerAlarm("Power", src, cameras, source)
 
+			for (var/item in GLOB.drones_list)
+				var/mob/living/simple_animal/drone/D = item
+				if(state == 1)
+					D.cancelAlarm("Power", src, source)
+				else
+					D.triggerAlarm("Power", src, cameras, source)
+			for(var/item in GLOB.alarmdisplay)
+				var/datum/computer_file/program/alarm_monitor/p = item
+				if(state == 1)
+					p.cancelAlarm("Power", src, source)
+				else
+					p.triggerAlarm("Power", src, cameras, source)
 
-/area/proc/atmosalert(danger_level, var/alarm_source, var/force = FALSE)
-	if(danger_level == ATMOS_ALARM_NONE)
-		atmosphere_alarm.clearAlarm(src, alarm_source)
-	else
-		atmosphere_alarm.triggerAlarm(src, alarm_source, severity = danger_level)
-
-	//Check all the alarms before lowering atmosalm. Raising is perfectly fine. If force = 1 we don't care.
-	for(var/obj/machinery/alarm/AA in src)
-		if(!(AA.stat & (NOPOWER|BROKEN)) && !AA.shorted && AA.report_danger_level && !force)
-			danger_level = max(danger_level, AA.danger_level)
-
+/area/proc/atmosalert(danger_level, obj/source)
 	if(danger_level != atmosalm)
-		if(danger_level < ATMOS_ALARM_WARNING && atmosalm >= ATMOS_ALARM_WARNING)
-			//closing the doors on red and opening on green provides a bit of hysteresis that will hopefully prevent fire doors from opening and closing repeatedly due to noise
-			air_doors_open()
-		else if(danger_level >= ATMOS_ALARM_DANGER && atmosalm < ATMOS_ALARM_DANGER)
-			air_doors_close()
+		if (danger_level==2)
 
-		atmosalm = danger_level
-		for(var/obj/machinery/alarm/AA in src)
-			AA.update_icon()
+			for (var/item in GLOB.silicon_mobs)
+				var/mob/living/silicon/aiPlayer = item
+				aiPlayer.triggerAlarm("Atmosphere", src, cameras, source)
+			for (var/item in GLOB.alert_consoles)
+				var/obj/machinery/computer/station_alert/a = item
+				a.triggerAlarm("Atmosphere", src, cameras, source)
+			for (var/item in GLOB.drones_list)
+				var/mob/living/simple_animal/drone/D = item
+				D.triggerAlarm("Atmosphere", src, cameras, source)
+			for(var/item in GLOB.alarmdisplay)
+				var/datum/computer_file/program/alarm_monitor/p = item
+				p.triggerAlarm("Atmosphere", src, cameras, source)
 
-		air_alarm_repository.update_cache(src)
+		else if (src.atmosalm == 2)
+			for (var/item in GLOB.silicon_mobs)
+				var/mob/living/silicon/aiPlayer = item
+				aiPlayer.cancelAlarm("Atmosphere", src, source)
+			for (var/item in GLOB.alert_consoles)
+				var/obj/machinery/computer/station_alert/a = item
+				a.cancelAlarm("Atmosphere", src, source)
+			for (var/item in GLOB.drones_list)
+				var/mob/living/simple_animal/drone/D = item
+				D.cancelAlarm("Atmosphere", src, source)
+			for(var/item in GLOB.alarmdisplay)
+				var/datum/computer_file/program/alarm_monitor/p = item
+				p.cancelAlarm("Atmosphere", src, source)
+
+		src.atmosalm = danger_level
 		return 1
-	air_alarm_repository.update_cache(src)
 	return 0
 
-/area/proc/air_doors_close()
-	if(!air_doors_activated)
-		air_doors_activated = TRUE
-		for(var/obj/machinery/door/firedoor/D in src)
-			if(!D.welded)
-				D.activate_alarm()
+/area/proc/ModifyFiredoors(opening)
+	if(firedoors)
+		firedoors_last_closed_on = world.time
+		for(var/FD in firedoors)
+			var/obj/machinery/door/firedoor/D = FD
+			var/cont = !D.welded
+			if(cont && opening)	//don't open if adjacent area is on fire
+				for(var/I in D.affecting_areas)
+					var/area/A = I
+					if(A.fire)
+						cont = FALSE
+						break
+			if(cont && D.is_operational())
 				if(D.operating)
-					D.nextstate = FD_CLOSED
-				else if(!D.density)
-					spawn(0)
-						D.close()
+					D.nextstate = opening ? FIREDOOR_OPEN : FIREDOOR_CLOSED
+				else if(!(D.density ^ opening))
+					INVOKE_ASYNC(D, (opening ? /obj/machinery/door/firedoor.proc/open : /obj/machinery/door/firedoor.proc/close))
 
-/area/proc/air_doors_open()
-	if(air_doors_activated)
-		air_doors_activated = FALSE
-		for(var/obj/machinery/door/firedoor/D in src)
-			if(!D.welded)
-				D.deactivate_alarm()
-				if(D.operating)
-					D.nextstate = OPEN
-				else if(D.density)
-					spawn(0)
-						D.open()
+/area/proc/firealert(obj/source)
+	if(always_unpowered == 1) //no fire alarms in space/asteroid
+		return
 
+	if (!fire)
+		set_fire_alarm_effect()
+		ModifyFiredoors(FALSE)
+		for(var/item in firealarms)
+			var/obj/machinery/firealarm/F = item
+			F.update_icon()
 
-/area/proc/fire_alert()
-	if(!fire)
-		fire = 1	//used for firedoor checks
-		updateicon()
-		mouse_opacity = MOUSE_OPACITY_TRANSPARENT
-		air_doors_close()
+	for (var/item in GLOB.alert_consoles)
+		var/obj/machinery/computer/station_alert/a = item
+		a.triggerAlarm("Fire", src, cameras, source)
+	for (var/item in GLOB.silicon_mobs)
+		var/mob/living/silicon/aiPlayer = item
+		aiPlayer.triggerAlarm("Fire", src, cameras, source)
+	for (var/item in GLOB.drones_list)
+		var/mob/living/simple_animal/drone/D = item
+		D.triggerAlarm("Fire", src, cameras, source)
+	for(var/item in GLOB.alarmdisplay)
+		var/datum/computer_file/program/alarm_monitor/p = item
+		p.triggerAlarm("Fire", src, cameras, source)
 
-/area/proc/fire_reset()
-	if(fire)
-		fire = 0	//used for firedoor checks
-		updateicon()
-		mouse_opacity = MOUSE_OPACITY_TRANSPARENT
-		air_doors_open()
+	START_PROCESSING(SSobj, src)
 
-	return
+/area/proc/firereset(obj/source)
+	if (fire)
+		unset_fire_alarm_effects()
+		ModifyFiredoors(TRUE)
+		for(var/item in firealarms)
+			var/obj/machinery/firealarm/F = item
+			F.update_icon()
 
-/area/proc/burglaralert(var/obj/trigger)
-	if(always_unpowered == 1) //no burglar alarms in space/asteroid
+	for (var/item in GLOB.silicon_mobs)
+		var/mob/living/silicon/aiPlayer = item
+		aiPlayer.cancelAlarm("Fire", src, source)
+	for (var/item in GLOB.alert_consoles)
+		var/obj/machinery/computer/station_alert/a = item
+		a.cancelAlarm("Fire", src, source)
+	for (var/item in GLOB.drones_list)
+		var/mob/living/simple_animal/drone/D = item
+		D.cancelAlarm("Fire", src, source)
+	for(var/item in GLOB.alarmdisplay)
+		var/datum/computer_file/program/alarm_monitor/p = item
+		p.cancelAlarm("Fire", src, source)
+
+	STOP_PROCESSING(SSobj, src)
+
+/area/process()
+	if(firedoors_last_closed_on + 100 < world.time)	//every 10 seconds
+		ModifyFiredoors(FALSE)
+
+/area/proc/close_and_lock_door(obj/machinery/door/DOOR)
+	set waitfor = FALSE
+	DOOR.close()
+	if(DOOR.density)
+		DOOR.lock()
+
+/area/proc/burglaralert(obj/trigger)
+	if(always_unpowered) //no burglar alarms in space/asteroid
 		return
 
 	//Trigger alarm effect
 	set_fire_alarm_effect()
-
 	//Lockdown airlocks
-	for(var/obj/machinery/door/airlock/A in src)
-		spawn(0)
-			A.close()
-			if(A.density)
-				A.lock()
+	for(var/obj/machinery/door/DOOR in src)
+		close_and_lock_door(DOOR)
 
-	burglar_alarm.triggerAlarm(src, trigger)
-	spawn(600)
-		burglar_alarm.clearAlarm(src, trigger)
+	for (var/i in GLOB.silicon_mobs)
+		var/mob/living/silicon/SILICON = i
+		if(SILICON.triggerAlarm("Burglar", src, cameras, trigger))
+			//Cancel silicon alert after 1 minute
+			addtimer(CALLBACK(SILICON, /mob/living/silicon.proc/cancelAlarm,"Burglar",src,trigger), 600)
 
 /area/proc/set_fire_alarm_effect()
-	fire = 1
-	updateicon()
+	fire = TRUE
 	mouse_opacity = MOUSE_OPACITY_TRANSPARENT
+	for(var/alarm in firealarms)
+		var/obj/machinery/firealarm/F = alarm
+		F.update_fire_light(fire)
+	for(var/obj/machinery/light/L in src)
+		L.update()
 
-/area/proc/readyalert()
-	if(!eject)
-		eject = 1
-		updateicon()
+/area/proc/unset_fire_alarm_effects()
+	fire = FALSE
+	mouse_opacity = MOUSE_OPACITY_TRANSPARENT
+	for(var/alarm in firealarms)
+		var/obj/machinery/firealarm/F = alarm
+		F.update_fire_light(fire)
+	for(var/obj/machinery/light/L in src)
+		L.update()
 
-/area/proc/readyreset()
-	if(eject)
-		eject = 0
-		updateicon()
+/area/proc/update_icon()
+	var/weather_icon
+	for(var/V in SSweather.processing)
+		var/datum/weather/W = V
+		if(W.stage != END_STAGE && (src in W.impacted_areas))
+			W.update_areas()
+			weather_icon = TRUE
+	if(!weather_icon)
+		icon_state = null
 
-/area/proc/partyalert()
-	if(!party)
-		party = 1
-		updateicon()
-		mouse_opacity = MOUSE_OPACITY_TRANSPARENT
-
-/area/proc/partyreset()
-	if(party)
-		party = 0
-		mouse_opacity = MOUSE_OPACITY_TRANSPARENT
-		updateicon()
-
-/area/proc/updateicon()
-	if((fire || eject || party) && (!requires_power||power_environ))//If it doesn't require power, can still activate this proc.
-		if(fire && !eject && !party)
-			icon_state = "red"
-		else if(!fire && eject && !party)
-			icon_state = "red"
-		else if(party && !fire && !eject)
-			icon_state = "party"
-		else
-			icon_state = "blue-red"
-		invisibility = INVISIBILITY_LIGHTING
-	else
-		var/weather_icon
-		for(var/V in SSweather.processing)
-			var/datum/weather/W = V
-			if(W.stage != END_STAGE && (src in W.impacted_areas))
-				W.update_areas()
-				weather_icon = TRUE
-		if(!weather_icon)
-			icon_state = null
-			invisibility = INVISIBILITY_MAXIMUM
-
-/area/space/updateicon()
+/area/space/update_icon()
 	icon_state = null
-	invisibility = INVISIBILITY_MAXIMUM
-
 
 /*
 #define EQUIP 1
@@ -222,7 +348,7 @@
 #define ENVIRON 3
 */
 
-/area/proc/powered(var/chan)		// return true if the area has power to given channel
+/area/proc/powered(chan)		// return true if the area has power to given channel
 
 	if(!requires_power)
 		return 1
@@ -245,10 +371,10 @@
 
 /area/proc/power_change()
 	for(var/obj/machinery/M in src)	// for each machine in the area
-		M.power_change()			// reverify power status (to update icons etc.)
-	updateicon()
+		M.power_change()				// reverify power status (to update icons etc.)
+	update_icon()
 
-/area/proc/usage(var/chan)
+/area/proc/usage(chan)
 	var/used = 0
 	switch(chan)
 		if(LIGHT)
@@ -277,12 +403,12 @@
 			static_environ += value
 
 /area/proc/clear_usage()
-
 	used_equip = 0
 	used_light = 0
 	used_environ = 0
 
-/area/proc/use_power(var/amount, var/chan)
+/area/proc/use_power(amount, chan)
+
 	switch(chan)
 		if(EQUIP)
 			used_equip += amount
@@ -291,113 +417,96 @@
 		if(ENVIRON)
 			used_environ += amount
 
-/area/proc/use_battery_power(var/amount, var/chan)
-	switch(chan)
-		if(EQUIP)
-			used_equip += amount
-		if(LIGHT)
-			used_light += amount
-		if(ENVIRON)
-			used_environ += amount
 
+/area/Entered(atom/movable/M)
+	set waitfor = FALSE
+	SEND_SIGNAL(src, COMSIG_AREA_ENTERED, M)
+	SEND_SIGNAL(M, COMSIG_ENTER_AREA, src) //The atom that enters the area
+	if(!isliving(M))
+		return
 
-/area/Entered(A)
-	var/area/newarea
-	var/area/oldarea
+	var/mob/living/L = M
+	if(!L.ckey)
+		return
 
-	if(istype(A,/mob))
-		var/mob/M=A
-
-		if(!M.lastarea)
-			M.lastarea = get_area(M)
-		newarea = get_area(M)
-		oldarea = M.lastarea
-
-		if(newarea==oldarea) return
-
-		M.lastarea = src
-
-		// /vg/ - EVENTS!
-		callHook("mob_area_change", list("mob" = M, "newarea" = newarea, "oldarea" = oldarea))
-
-	if(!istype(A,/mob/living))	return
-
-	var/mob/living/L = A
-	if(!L.ckey)	return
-	if((oldarea.has_gravity == 0) && (newarea.has_gravity == 1) && (L.m_intent == MOVE_INTENT_RUN)) // Being ready when you change areas gives you a chance to avoid falling all together.
-		thunk(L)
-
-	// Ambience goes down here -- make sure to list each area seperately for ease of adding things in later, thanks! Note: areas adjacent to each other should have the same sounds to prevent cutoff when possible.- LastyScratch
-	if(L && L.client && !L.client.ambience_playing && (L.client.prefs.sound & SOUND_BUZZ))	//split off the white noise from the rest of the ambience because of annoyance complaints - Kluys
+	// Ambience goes down here -- make sure to list each area separately for ease of adding things in later, thanks! Note: areas adjacent to each other should have the same sounds to prevent cutoff when possible.- LastyScratch
+	if(L.client && !L.client.ambience_playing && L.client.prefs.toggles & SOUND_SHIP_AMBIENCE)
 		L.client.ambience_playing = 1
-		L << sound('sound/ambience/shipambience.ogg', repeat = 1, wait = 0, volume = 35, channel = CHANNEL_BUZZ)
-	else if(L && L.client && !(L.client.prefs.sound & SOUND_BUZZ))
-		L.client.ambience_playing = 0
+		SEND_SOUND(L, sound('sound/ambience/shipambience.ogg', repeat = 1, wait = 0, volume = 35, channel = CHANNEL_BUZZ))
 
-	if(prob(35) && L && L.client && (L.client.prefs.sound & SOUND_AMBIENCE))
+	if(!(L.client && (L.client.prefs.toggles & SOUND_AMBIENCE)))
+		return //General ambience check is below the ship ambience so one can play without the other
+
+	if(prob(35))
 		var/sound = pick(ambientsounds)
 
 		if(!L.client.played)
-			L << sound(sound, repeat = 0, wait = 0, volume = 25, channel = CHANNEL_AMBIENCE)
-			L.client.played = 1
-			spawn(600)			//ewww - this is very very bad
-				if(L && L.client)
-					L.client.played = 0
+			SEND_SOUND(L, sound(sound, repeat = 0, wait = 0, volume = 25, channel = CHANNEL_AMBIENCE))
+			L.client.played = TRUE
+			addtimer(CALLBACK(L.client, /client/proc/ResetAmbiencePlayed), 600)
 
-/area/proc/gravitychange(var/gravitystate = 0, var/area/A)
-	A.has_gravity = gravitystate
+/area/Exited(atom/movable/M)
+	SEND_SIGNAL(src, COMSIG_AREA_EXITED, M)
+	SEND_SIGNAL(M, COMSIG_EXIT_AREA, src) //The atom that exits the area
 
-	if(gravitystate)
-		for(var/mob/living/carbon/human/M in A)
-			thunk(M)
+/client/proc/ResetAmbiencePlayed()
+	played = FALSE
 
-/area/proc/thunk(var/mob/living/carbon/human/M)
-	if(istype(M,/mob/living/carbon/human/))  // Only humans can wear magboots, so we give them a chance to.
-		if(istype(M.shoes, /obj/item/clothing/shoes/magboots) && (M.shoes.flags & NOSLIP))
-			return
+/atom/proc/has_gravity(turf/T)
+	if(!T || !isturf(T))
+		T = get_turf(src)
 
-	if(M.buckled) //Cam't fall down if you are buckled
-		return
-
-	if(istype(get_turf(M), /turf/space)) // Can't fall onto nothing.
-		return
-
-	if((istype(M,/mob/living/carbon/human/)) && (M.m_intent == MOVE_INTENT_RUN))
-		M.Stun(5)
-		M.Weaken(5)
-
-	else if(istype(M,/mob/living/carbon/human/))
-		M.Stun(2)
-		M.Weaken(2)
-
-
-	to_chat(M, "Gravity!")
-
-/proc/has_gravity(atom/AT, turf/T)
 	if(!T)
-		T = get_turf(AT)
-	var/area/A = get_area(T)
-	if(istype(T, /turf/space)) // Turf never has gravity
 		return 0
-	else if(A && A.has_gravity) // Areas which always has gravity
-		return 1
+
+	var/list/forced_gravity = list()
+	SEND_SIGNAL(src, COMSIG_ATOM_HAS_GRAVITY, T, forced_gravity)
+	if(!forced_gravity.len)
+		SEND_SIGNAL(T, COMSIG_TURF_HAS_GRAVITY, src, forced_gravity)
+	if(forced_gravity.len)
+		var/max_grav
+		for(var/i in forced_gravity)
+			max_grav = max(max_grav, i)
+		return max_grav
+
+	if(isspaceturf(T)) // Turf never has gravity
+		return 0
+
+	var/area/A = get_area(T)
+	if(A.has_gravity) // Areas which always has gravity
+		return A.has_gravity
 	else
 		// There's a gravity generator on our z level
-		// This would do well when integrated with the z level manager
-		if(T && gravity_generators["[T.z]"] && length(gravity_generators["[T.z]"]))
-			return 1
-	return 0
+		if(GLOB.gravity_generators["[T.z]"])
+			var/max_grav = 0
+			for(var/obj/machinery/gravity_generator/main/G in GLOB.gravity_generators["[T.z]"])
+				max_grav = max(G.setting,max_grav)
+			return max_grav
+	return SSmapping.level_trait(T.z, ZTRAIT_GRAVITY)
 
-/area/proc/prison_break()
-	for(var/obj/machinery/power/apc/temp_apc in src)
-		temp_apc.overload_lighting(70)
-	for(var/obj/machinery/door/airlock/temp_airlock in src)
-		temp_airlock.prison_open()
-	for(var/obj/machinery/door/window/temp_windoor in src)
-		temp_windoor.open()
+/area/proc/setup(a_name)
+	name = a_name
+	power_equip = FALSE
+	power_light = FALSE
+	power_environ = FALSE
+	always_unpowered = FALSE
+	valid_territory = FALSE
+	blob_allowed = FALSE
+	addSorted()
+
+/area/proc/update_areasize()
+	if(outdoors)
+		return FALSE
+	areasize = 0
+	for(var/turf/open/T in contents)
+		areasize++
 
 /area/AllowDrop()
 	CRASH("Bad op: area/AllowDrop() called")
 
 /area/drop_location()
 	CRASH("Bad op: area/drop_location() called")
+
+// A hook so areas can modify the incoming args
+/area/proc/PlaceOnTopReact(list/new_baseturfs, turf/fake_turf_type, flags)
+	return flags

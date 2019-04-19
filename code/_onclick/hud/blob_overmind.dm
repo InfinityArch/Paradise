@@ -1,6 +1,3 @@
-/mob/camera/blob/create_mob_hud()
-	if(client && !hud_used)
-		hud_used = new /datum/hud/blob_overmind(src)
 
 /obj/screen/blob
 	icon = 'icons/mob/blob.dmi'
@@ -38,34 +35,31 @@
 
 /obj/screen/blob/JumpToCore/MouseEntered(location,control,params)
 	if(hud && hud.mymob && isovermind(hud.mymob))
-		name = initial(name)
-		desc = initial(desc)
+		var/mob/camera/blob/B = hud.mymob
+		if(!B.placed)
+			name = "Place Blob Core"
+			desc = "Attempt to place your blob core at this location."
+		else
+			name = initial(name)
+			desc = initial(desc)
 	..()
 
 /obj/screen/blob/JumpToCore/Click()
 	if(isovermind(usr))
 		var/mob/camera/blob/B = usr
+		if(!B.placed)
+			B.place_blob_core(B.base_point_rate, 0)
 		B.transport_core()
 
 /obj/screen/blob/Blobbernaut
 	icon_state = "ui_blobbernaut"
-	name = "Produce Blobbernaut (20)"
-	desc = "Produces a strong, but dumb blobbernaut from a factory blob for 20 resources.<br>The factory blob will be destroyed in the process."
+	name = "Produce Blobbernaut (40)"
+	desc = "Produces a strong, smart blobbernaut from a factory blob for 40 resources.<br>The factory blob used will become fragile and unable to produce spores."
 
 /obj/screen/blob/Blobbernaut/Click()
 	if(isovermind(usr))
 		var/mob/camera/blob/B = usr
 		B.create_blobbernaut()
-
-/obj/screen/blob/StorageBlob
-	icon_state = "ui_storage"
-	name = "Produce Storage Blob (40)"
-	desc = "Produces a storage blob for 40 resources.<br>Storage blobs will raise your max resource cap by 50."
-
-/obj/screen/blob/StorageBlob/Click()
-	if(isovermind(usr))
-		var/mob/camera/blob/B = usr
-		B.create_storage()
 
 /obj/screen/blob/ResourceBlob
 	icon_state = "ui_resource"
@@ -79,8 +73,8 @@
 
 /obj/screen/blob/NodeBlob
 	icon_state = "ui_node"
-	name = "Produce Node Blob (60)"
-	desc = "Produces a node blob for 60 resources.<br>Node blobs will expand and activate nearby resource and factory blobs."
+	name = "Produce Node Blob (50)"
+	desc = "Produces a node blob for 50 resources.<br>Node blobs will expand and activate nearby resource and factory blobs."
 
 /obj/screen/blob/NodeBlob/Click()
 	if(isovermind(usr))
@@ -99,13 +93,18 @@
 
 /obj/screen/blob/ReadaptChemical
 	icon_state = "ui_chemswap"
-	name = "Readapt Chemical (50)"
-	desc = "Randomly rerolls your chemical for 50 resources."
+	name = "Readapt Chemical (40)"
+	desc = "Randomly rerolls your chemical for 40 resources."
 
 /obj/screen/blob/ReadaptChemical/MouseEntered(location,control,params)
 	if(hud && hud.mymob && isovermind(hud.mymob))
-		name = initial(name)
-		desc = initial(desc)
+		var/mob/camera/blob/B = hud.mymob
+		if(B.free_chem_rerolls)
+			name = "Readapt Chemical (FREE)"
+			desc = "Randomly rerolls your chemical for free."
+		else
+			name = initial(name)
+			desc = initial(desc)
 	..()
 
 /obj/screen/blob/ReadaptChemical/Click()
@@ -123,17 +122,7 @@
 		var/mob/camera/blob/B = usr
 		B.relocate_core()
 
-/obj/screen/blob/Split
-	icon_state = "ui_split"
-	name = "Split consciousness (100)"
-	desc = "Creates another Blob Overmind at the nearest node. One use only.<br>Offsprings are be unable to use this ability."
-
-/obj/screen/blob/Split/Click()
-	if(isovermind(usr))
-		var/mob/camera/blob/B = usr
-		B.split_consciousness()
-
-/datum/hud/blob_overmind/New(mob/user)
+/datum/hud/blob_overmind/New(mob/owner)
 	..()
 	var/obj/screen/using
 
@@ -141,13 +130,13 @@
 	blobpwrdisplay.name = "blob power"
 	blobpwrdisplay.icon_state = "block"
 	blobpwrdisplay.screen_loc = ui_health
-	static_inventory += blobpwrdisplay
+	blobpwrdisplay.mouse_opacity = MOUSE_OPACITY_TRANSPARENT
+	blobpwrdisplay.layer = ABOVE_HUD_LAYER
+	blobpwrdisplay.plane = ABOVE_HUD_PLANE
+	infodisplay += blobpwrdisplay
 
-	blobhealthdisplay = new /obj/screen()
-	blobhealthdisplay.name = "blob health"
-	blobhealthdisplay.icon_state = "block"
-	blobhealthdisplay.screen_loc = ui_internal
-	static_inventory += blobhealthdisplay
+	healths = new /obj/screen/healths/blob()
+	infodisplay += healths
 
 	using = new /obj/screen/blob/BlobHelp()
 	using.screen_loc = "WEST:6,NORTH:-3"
@@ -163,10 +152,6 @@
 	static_inventory += using
 
 	using = new /obj/screen/blob/Blobbernaut()
-	using.screen_loc = ui_id
-	static_inventory += using
-
-	using = new /obj/screen/blob/StorageBlob()
 	using.screen_loc = ui_belt
 	static_inventory += using
 
@@ -175,11 +160,11 @@
 	static_inventory += using
 
 	using = new /obj/screen/blob/NodeBlob()
-	using.screen_loc = using.screen_loc = ui_rhand
+	using.screen_loc = ui_hand_position(2)
 	static_inventory += using
 
 	using = new /obj/screen/blob/FactoryBlob()
-	using.screen_loc = using.screen_loc = ui_lhand
+	using.screen_loc = ui_hand_position(1)
 	static_inventory += using
 
 	using = new /obj/screen/blob/ReadaptChemical()
@@ -189,8 +174,4 @@
 
 	using = new /obj/screen/blob/RelocateCore()
 	using.screen_loc = ui_storage2
-	static_inventory += using
-
-	using = new /obj/screen/blob/Split()
-	using.screen_loc = ui_acti
 	static_inventory += using

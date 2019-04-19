@@ -3,42 +3,41 @@
 	desc = "Used for scanning and monitoring health."
 	icon_state = "health"
 	materials = list(MAT_METAL=800, MAT_GLASS=200)
-	origin_tech = "magnets=1;biotech=1"
+	attachable = TRUE
 	secured = FALSE
 
 	var/scanning = FALSE
 	var/health_scan
-	var/alarm_health = 0
+	var/alarm_health = HEALTH_THRESHOLD_CRIT
 
-
+/obj/item/assembly/health/examine(mob/user)
+	..()
+	to_chat(user, "<span class='notice'>Use a multitool to swap between \"detect death\" mode and \"detect critical state\" mode.</span>")
 
 /obj/item/assembly/health/activate()
 	if(!..())
 		return FALSE//Cooldown check
 	toggle_scan()
-	return FALSE
+	return TRUE
 
 /obj/item/assembly/health/toggle_secure()
 	secured = !secured
 	if(secured && scanning)
-		processing_objects.Add(src)
+		START_PROCESSING(SSobj, src)
 	else
 		scanning = FALSE
-		processing_objects.Remove(src)
+		STOP_PROCESSING(SSobj, src)
 	update_icon()
 	return secured
 
-/obj/item/assembly/health/attackby(obj/item/W, mob/user)
-	if(ismultitool(W))
-		if(alarm_health == 0)
-			alarm_health = -90
-			user.show_message("You toggle [src] to \"detect death\" mode.")
-		else
-			alarm_health = 0
-			user.show_message("You toggle [src] to \"detect critical state\" mode.")
-		return
+/obj/item/assembly/health/multitool_act(mob/living/user, obj/item/I)
+	if(alarm_health == HEALTH_THRESHOLD_CRIT)
+		alarm_health = HEALTH_THRESHOLD_DEAD
+		to_chat(user, "<span class='notice'>You toggle [src] to \"detect death\" mode.</span>")
 	else
-		return ..()
+		alarm_health = HEALTH_THRESHOLD_CRIT
+		to_chat(user, "<span class='notice'>You toggle [src] to \"detect critical state\" mode.</span>")
+	return TRUE
 
 /obj/item/assembly/health/process()
 	if(!scanning || !secured)
@@ -56,34 +55,33 @@
 		health_scan = M.health
 		if(health_scan <= alarm_health)
 			pulse()
-			audible_message("[bicon(src)] *beep* *beep*", "*beep* *beep*")
+			audible_message("[icon2html(src, hearers(src))] *beep* *beep* *beep*")
+			playsound(src, 'sound/machines/triple_beep.ogg', ASSEMBLY_BEEP_VOLUME, TRUE)
 			toggle_scan()
 		return
 	return
 
 /obj/item/assembly/health/proc/toggle_scan()
 	if(!secured)
-		return FALSE
+		return 0
 	scanning = !scanning
 	if(scanning)
-		processing_objects.Add(src)
+		START_PROCESSING(SSobj, src)
 	else
-		processing_objects.Remove(src)
+		STOP_PROCESSING(SSobj, src)
 	return
 
-/obj/item/assembly/health/interact(mob/user)//TODO: Change this to the wires thingy
+/obj/item/assembly/health/ui_interact(mob/user as mob)//TODO: Change this to the wires thingy
+	. = ..()
 	if(!secured)
 		user.show_message("<span class='warning'>The [name] is unsecured!</span>")
 		return FALSE
-	var/dat = text("<TT><B>Health Sensor</B> <A href='?src=[UID()];scanning=1'>[scanning?"On":"Off"]</A>")
+	var/dat = "<TT><B>Health Sensor</B></TT>"
+	dat += "<BR><A href='?src=[REF(src)];scanning=1'>[scanning?"On":"Off"]</A>"
 	if(scanning && health_scan)
 		dat += "<BR>Health: [health_scan]"
-	var/datum/browser/popup = new(user, "hscan", name, 400, 400)
-	popup.set_content(dat)
-	popup.open(0)
+	user << browse(dat, "window=hscan")
 	onclose(user, "hscan")
-	return
-
 
 /obj/item/assembly/health/Topic(href, href_list)
 	..()
@@ -92,7 +90,7 @@
 
 	var/mob/user = usr
 
-	if(!usr.canmove || usr.stat || usr.restrained() || !in_range(loc, usr))
+	if(!user.canUseTopic(src))
 		usr << browse(null, "window=hscan")
 		onclose(usr, "hscan")
 		return

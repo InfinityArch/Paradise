@@ -1,7 +1,7 @@
 // Starthistle
 /obj/item/seeds/starthistle
 	name = "pack of starthistle seeds"
-	desc = "A robust species of weed that often springs up in-between the cracks of spaceship parking lots"
+	desc = "A robust species of weed that often springs up in-between the cracks of spaceship parking lots."
 	icon_state = "seed-starthistle"
 	species = "starthistle"
 	plantname = "Starthistle"
@@ -18,14 +18,15 @@
 
 /obj/item/seeds/starthistle/harvest(mob/user)
 	var/obj/machinery/hydroponics/parent = loc
+	var/seed_count = yield
 	if(prob(getYield() * 20))
+		seed_count++
 		var/output_loc = parent.Adjacent(user) ? user.loc : parent.loc
-		for(var/i in 1 to yield+1)
+		for(var/i in 1 to seed_count)
 			var/obj/item/seeds/starthistle/harvestseeds = Copy()
 			harvestseeds.forceMove(output_loc)
 
 	parent.update_tray()
-
 
 // Cabbage
 /obj/item/seeds/cabbage
@@ -44,7 +45,7 @@
 	growing_icon = 'icons/obj/hydroponics/growing_vegetables.dmi'
 	genes = list(/datum/plant_gene/trait/repeated_harvest)
 	mutatelist = list(/obj/item/seeds/replicapod)
-	reagents_add = list("vitamin" = 0.04, "plantmatter" = 0.1)
+	reagents_add = list("vitamin" = 0.04, "nutriment" = 0.1)
 
 /obj/item/reagent_containers/food/snacks/grown/cabbage
 	seed = /obj/item/seeds/cabbage
@@ -53,8 +54,8 @@
 	icon_state = "cabbage"
 	filling_color = "#90EE90"
 	bitesize_mod = 2
-	wine_power = 0.2
-
+	foodtype = VEGETABLES
+	wine_power = 20
 
 // Sugarcane
 /obj/item/seeds/sugarcane
@@ -79,8 +80,8 @@
 	icon_state = "sugarcane"
 	filling_color = "#FFD700"
 	bitesize_mod = 2
+	foodtype = VEGETABLES | SUGAR
 	distill_reagent = "rum"
-
 
 // Gatfruit
 /obj/item/seeds/gatfruit
@@ -107,10 +108,11 @@
 	name = "gatfruit"
 	desc = "It smells like burning."
 	icon_state = "gatfruit"
-	origin_tech = "combat=6"
-	trash = /obj/item/gun/projectile/revolver
+	trash = /obj/item/gun/ballistic/revolver
 	bitesize_mod = 2
-	wine_power = 0.9 //It burns going down, too.
+	foodtype = FRUIT
+	tastes = list("gunpowder" = 1)
+	wine_power = 90 //It burns going down, too.
 
 //Cherry Bombs
 /obj/item/seeds/cherry/bomb
@@ -121,7 +123,7 @@
 	plantname = "Cherry Bomb Tree"
 	product = /obj/item/reagent_containers/food/snacks/grown/cherry_bomb
 	mutatelist = list()
-	reagents_add = list("plantmatter" = 0.1, "sugar" = 0.1, "blackpowder" = 0.7)
+	reagents_add = list("nutriment" = 0.1, "sugar" = 0.1, "blackpowder" = 0.7)
 	rarity = 60 //See above
 
 /obj/item/reagent_containers/food/snacks/grown/cherry_bomb
@@ -132,23 +134,37 @@
 	seed = /obj/item/seeds/cherry/bomb
 	bitesize_mod = 2
 	volume = 125 //Gives enough room for the black powder at max potency
-	wine_power = 0.8
+	max_integrity = 40
+	wine_power = 80
 
 /obj/item/reagent_containers/food/snacks/grown/cherry_bomb/attack_self(mob/living/user)
-	var/area/A = get_area(user)
 	user.visible_message("<span class='warning'>[user] plucks the stem from [src]!</span>", "<span class='userdanger'>You pluck the stem from [src], which begins to hiss loudly!</span>")
-	message_admins("[user] ([user.key ? user.key : "no key"]) primed a cherry bomb for detonation at [A] ([user.x], [user.y], [user.z]) <A HREF='?_src_=holder;adminplayerobservecoodjump=1;X=[user.x];Y=[user.y];Z=[user.z]'>(JMP)</a>")
-	log_game("[user] ([user.key ? user.key : "no key"]) primed a cherry bomb for detonation at [A] ([user.x],[user.y],[user.z]).")
+	log_bomber(user, "primed a", src, "for detonation")
 	prime()
 
-/obj/item/reagent_containers/food/snacks/grown/cherry_bomb/burn()
-	prime()
-	..()
+/obj/item/reagent_containers/food/snacks/grown/cherry_bomb/deconstruct(disassembled = TRUE)
+	if(!disassembled)
+		prime()
+	if(!QDELETED(src))
+		qdel(src)
 
 /obj/item/reagent_containers/food/snacks/grown/cherry_bomb/ex_act(severity)
 	qdel(src) //Ensuring that it's deleted by its own explosion. Also prevents mass chain reaction with piles of cherry bombs
 
 /obj/item/reagent_containers/food/snacks/grown/cherry_bomb/proc/prime()
 	icon_state = "cherry_bomb_lit"
-	playsound(src, 'sound/goonstation/misc/fuse.ogg', seed.potency, 0)
-	reagents.set_reagent_temp(1000) //Sets off the black powder
+	playsound(src, 'sound/effects/fuse.ogg', seed.potency, 0)
+	reagents.chem_temp = 1000 //Sets off the black powder
+	reagents.handle_reactions()
+
+// Lavaland cactus
+
+/obj/item/seeds/lavaland/cactus
+	name = "pack of fruiting cactus seeds"
+	desc = "These seeds grow into fruiting cacti."
+	icon_state = "seed-cactus"
+	species = "cactus"
+	plantname = "Fruiting Cactus"
+	product = /obj/item/reagent_containers/food/snacks/grown/ash_flora/cactus_fruit
+	growing_icon = 'icons/obj/hydroponics/growing_fruits.dmi'
+	growthstages = 2

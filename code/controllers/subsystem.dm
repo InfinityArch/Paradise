@@ -50,9 +50,9 @@
 	. = SS_SLEEPING
 	fire(resumed)
 	. = state
-	if(state == SS_SLEEPING)
+	if (state == SS_SLEEPING)
 		state = SS_IDLE
-	if(state == SS_PAUSING)
+	if (state == SS_PAUSING)
 		var/QT = queued_time
 		enqueue()
 		state = SS_PAUSED
@@ -63,7 +63,7 @@
 //Sleeping in here prevents future fires until returned.
 /datum/controller/subsystem/proc/fire(resumed = 0)
 	flags |= SS_NO_FIRE
-	throw EXCEPTION("Subsystem [src]([type]) does not fire() but did not set the SS_NO_FIRE flag. Please add the SS_NO_FIRE flag to any subsystem that doesn't fire so it doesn't get added to the processing list and waste cpu.")
+	CRASH("Subsystem [src]([type]) does not fire() but did not set the SS_NO_FIRE flag. Please add the SS_NO_FIRE flag to any subsystem that doesn't fire so it doesn't get added to the processing list and waste cpu.")
 
 /datum/controller/subsystem/Destroy()
 	dequeue()
@@ -82,48 +82,48 @@
 	var/queue_node_priority
 	var/queue_node_flags
 
-	for(queue_node = Master.queue_head; queue_node; queue_node = queue_node.queue_next)
+	for (queue_node = Master.queue_head; queue_node; queue_node = queue_node.queue_next)
 		queue_node_priority = queue_node.queued_priority
 		queue_node_flags = queue_node.flags
 
-		if(queue_node_flags & SS_TICKER)
-			if(!(SS_flags & SS_TICKER))
+		if (queue_node_flags & SS_TICKER)
+			if (!(SS_flags & SS_TICKER))
 				continue
-			if(queue_node_priority < SS_priority)
+			if (queue_node_priority < SS_priority)
 				break
 
-		else if(queue_node_flags & SS_BACKGROUND)
-			if(!(SS_flags & SS_BACKGROUND))
+		else if (queue_node_flags & SS_BACKGROUND)
+			if (!(SS_flags & SS_BACKGROUND))
 				break
-			if(queue_node_priority < SS_priority)
+			if (queue_node_priority < SS_priority)
 				break
 
 		else
-			if(SS_flags & SS_BACKGROUND)
+			if (SS_flags & SS_BACKGROUND)
 				continue
-			if(SS_flags & SS_TICKER)
+			if (SS_flags & SS_TICKER)
 				break
-			if(queue_node_priority < SS_priority)
+			if (queue_node_priority < SS_priority)
 				break
 
 	queued_time = world.time
 	queued_priority = SS_priority
 	state = SS_QUEUED
-	if(SS_flags & SS_BACKGROUND) //update our running total
+	if (SS_flags & SS_BACKGROUND) //update our running total
 		Master.queue_priority_count_bg += SS_priority
 	else
 		Master.queue_priority_count += SS_priority
 
 	queue_next = queue_node
-	if(!queue_node)//we stopped at the end, add to tail
+	if (!queue_node)//we stopped at the end, add to tail
 		queue_prev = Master.queue_tail
-		if(Master.queue_tail)
+		if (Master.queue_tail)
 			Master.queue_tail.queue_next = src
 		else //empty queue, we also need to set the head
 			Master.queue_head = src
 		Master.queue_tail = src
 
-	else if(queue_node == Master.queue_head)//insert at start of list
+	else if (queue_node == Master.queue_head)//insert at start of list
 		Master.queue_head.queue_prev = src
 		Master.queue_head = src
 		queue_prev = null
@@ -134,16 +134,16 @@
 
 
 /datum/controller/subsystem/proc/dequeue()
-	if(queue_next)
+	if (queue_next)
 		queue_next.queue_prev = queue_prev
-	if(queue_prev)
+	if (queue_prev)
 		queue_prev.queue_next = queue_next
-	if(src == Master.queue_tail)
+	if (src == Master.queue_tail)
 		Master.queue_tail = queue_prev
-	if(src == Master.queue_head)
+	if (src == Master.queue_head)
 		Master.queue_head = queue_next
 	queued_time = 0
-	if(state == SS_QUEUED)
+	if (state == SS_QUEUED)
 		state = SS_IDLE
 
 
@@ -168,30 +168,32 @@
 //hook for printing stats to the "MC" statuspanel for admins to see performance and related stats etc.
 /datum/controller/subsystem/stat_entry(msg)
 	if(!statclick)
-		statclick = new/obj/effect/statclick/debug(src, "Initializing...")
+		statclick = new/obj/effect/statclick/debug(null, "Initializing...", src)
+
+
 
 	if(can_fire && !(SS_NO_FIRE & flags))
-		msg = "[round(cost, 1)]ms | [round(tick_usage, 1)]%([round(tick_overrun, 1)]%) | [round(ticks, 0.1)]\t[msg]"
+		msg = "[round(cost,1)]ms|[round(tick_usage,1)]%([round(tick_overrun,1)]%)|[round(ticks,0.1)]\t[msg]"
 	else
 		msg = "OFFLINE\t[msg]"
 
 	var/title = name
-	if(can_fire)
+	if (can_fire)
 		title = "\[[state_letter()]][title]"
 
 	stat(title, statclick.update(msg))
 
 /datum/controller/subsystem/proc/state_letter()
-	switch(state)
-		if(SS_RUNNING)
+	switch (state)
+		if (SS_RUNNING)
 			. = "R"
-		if(SS_QUEUED)
+		if (SS_QUEUED)
 			. = "Q"
-		if(SS_PAUSED, SS_PAUSING)
+		if (SS_PAUSED, SS_PAUSING)
 			. = "P"
-		if(SS_SLEEPING)
+		if (SS_SLEEPING)
 			. = "S"
-		if(SS_IDLE)
+		if (SS_IDLE)
 			. = "  "
 
 //could be used to postpone a costly subsystem for (default one) var/cycles, cycles
@@ -205,11 +207,12 @@
 /datum/controller/subsystem/Recover()
 
 /datum/controller/subsystem/vv_edit_var(var_name, var_value)
-	switch(var_name)
-		if("can_fire")
+	switch (var_name)
+		if ("can_fire")
 			//this is so the subsystem doesn't rapid fire to make up missed ticks causing more lag
-			if(var_value)
+			if (var_value)
 				next_fire = world.time + wait
-		if("queued_priority") //editing this breaks things.
+		if ("queued_priority") //editing this breaks things.
 			return 0
 	. = ..()
+
