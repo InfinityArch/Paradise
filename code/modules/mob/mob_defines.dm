@@ -1,6 +1,6 @@
 /mob
 	density = 1
-	layer = 4.0
+	layer = MOB_LAYER
 	animate_movement = 2
 	pressure_resistance = 8
 	dont_save = TRUE //to avoid it messing up in buildmode saving
@@ -83,7 +83,6 @@
 	var/obj/item/clothing/mask/wear_mask = null//Carbon
 
 	var/seer = 0 //for cult//Carbon, probably Human
-	var/see_override = 0
 
 	var/datum/hud/hud_used = null
 
@@ -93,7 +92,7 @@
 
 	var/list/grabbed_by = list()
 	var/list/requests = list()
-
+	var/lighting_alpha = LIGHTING_PLANE_ALPHA_VISIBLE
 	var/list/mapobjs = list()
 
 	var/in_throw_mode = 0

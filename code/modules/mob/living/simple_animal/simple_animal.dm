@@ -534,8 +534,8 @@
 
 	W.forceMove(src)
 	W.equipped(src, slot)
-	W.layer = 20
-	W.plane = HUD_PLANE
+	W.layer = ABOVE_HUD_LAYER
+	W.plane = ABOVE_HUD_PLANE
 
 	switch(slot)
 		if(slot_collar)
@@ -563,22 +563,6 @@
 
 /mob/living/simple_animal/proc/sentience_act() //Called when a simple animal gains sentience via gold slime potion
 	return
-
-/mob/living/simple_animal/update_sight()
-	if(!client)
-		return
-	if(stat == DEAD)
-		grant_death_vision()
-		return
-
-	see_invisible = initial(see_invisible)
-	see_in_dark = initial(see_in_dark)
-	sight = initial(sight)
-
-	if(client.eye != src)
-		var/atom/A = client.eye
-		if(A.update_remote_sight(src)) //returns 1 if we override all other sight updates.
-			return
 
 /mob/living/simple_animal/can_hear()
 	. = TRUE
