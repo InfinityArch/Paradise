@@ -237,8 +237,7 @@
 			Goto(target,move_to_delay,minimum_distance)
 		if(target)
 			if(targets_from && isturf(targets_from.loc) && target.Adjacent(targets_from)) //If they're next to us, attack
-				AttackingTarget()
-				GainPatience()
+				addtimer(CALLBACK(src, .proc/AttackingTarget), 0.9, TIMER_STOPPABLE)
 			return 1
 		return 0
 	if(environment_smash)
@@ -272,6 +271,7 @@
 
 /mob/living/simple_animal/hostile/proc/AttackingTarget()
 	target.attack_animal(src)
+	GainPatience()
 
 /mob/living/simple_animal/hostile/proc/Aggro()
 	vision_range = aggro_vision_range
