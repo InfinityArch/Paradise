@@ -3,6 +3,7 @@
 	desc = "Contains all the luck you'll ever need."
 	icon = 'icons/obj/dice.dmi'
 	icon_state = "dicebag"
+	can_hold = list(/obj/item/dice)
 
 /obj/item/storage/pill_bottle/dice/New()
 	..()
@@ -111,10 +112,9 @@
 /obj/item/dice/attack_self(mob/user as mob)
 	diceroll(user)
 
-/obj/item/dice/throw_at(atom/target, range, speed, mob/thrower, spin=1, diagonals_first = 0, datum/callback/callback)
-	if(!..())
-		return
-	diceroll(thrower)
+/obj/item/dice/throw_impact(atom/target)
+	diceroll(thrownby)
+	. = ..()
 
 /obj/item/dice/proc/diceroll(mob/user)
 	result = rand(1, sides)

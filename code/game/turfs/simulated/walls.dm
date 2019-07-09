@@ -49,7 +49,6 @@
 		qdel(WR)
 	. = ..()
 
-
 //Appearance
 /turf/simulated/wall/examine(mob/user)
 	. = ..(user)
@@ -137,7 +136,7 @@
 			var/obj/structure/sign/poster/P = O
 			P.roll_and_drop(src)
 		else
-			O.loc = src
+			O.forceMove(src)
 
 	ChangeTurf(/turf/simulated/floor/plating)
 
@@ -152,7 +151,7 @@
 /turf/simulated/wall/ex_act(severity)
 	switch(severity)
 		if(1.0)
-			src.ChangeTurf(/turf/space)
+			ChangeTurf(baseturf)
 			return
 		if(2.0)
 			if(prob(50))
@@ -201,6 +200,11 @@
 		for(var/i=0, i<number_rots, i++)
 			new /obj/effect/overlay/wall_rot(src)
 
+/turf/simulated/wall/burn_down()
+	if(istype(sheet_type, /obj/item/stack/sheet/mineral/diamond))
+		return
+	ChangeTurf(/turf/simulated/floor)
+
 /turf/simulated/wall/proc/thermitemelt(mob/user as mob, speed)
 	var/wait = 100
 	if(speed)
@@ -248,6 +252,7 @@
 
 /turf/simulated/wall/attack_hulk(mob/user, does_attack_animation = FALSE)
 	..(user, TRUE)
+
 	if(prob(hardness) || rotting)
 		playsound(src, 'sound/effects/meteorimpact.ogg', 100, 1)
 		user.say(pick(";RAAAAAAAARGH!", ";HNNNNNNNNNGGGGGGH!", ";GWAAAAAAAARRRHHH!", "NNNNNNNNGGGGGGGGHH!", ";AAAAAAARRRGH!" ))
@@ -282,9 +287,6 @@
 	if(rotting && try_rot(I, user, params))
 		return
 
-	if(thermite && try_thermite(I, user, params))
-		return
-
 	if(try_decon(I, user, params))
 		return
 
@@ -314,20 +316,6 @@
 		to_chat(user, "<span class='notice'>[src] crumbles away under the force of your [I.name].</span>")
 		dismantle_wall(1)
 		return TRUE
-	return FALSE
-
-/turf/simulated/wall/proc/try_thermite(obj/item/I, mob/user, params)
-	if(iswelder(I))
-		var/obj/item/weldingtool/WT = I
-		if(WT.remove_fuel(0, user))
-			thermitemelt(user)
-			return TRUE
-
-	else if(istype(I, /obj/item/gun/energy/plasmacutter))
-		thermitemelt(user)
-		return TRUE
-
-
 	return FALSE
 
 /turf/simulated/wall/proc/try_decon(obj/item/I, mob/user, params)

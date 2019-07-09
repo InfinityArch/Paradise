@@ -19,7 +19,7 @@
 	pixel_x = rand(0, 16) - 8
 	pixel_y = rand(0, 8) - 8
 	if(is_mining_level(z))
-		score_oremined++ //When ore spawns, increment score.  Only include ore spawned on mining asteroid (No Clown Planet)
+		score_oremined++ //When ore spawns, increment score.  Only include ore spawned on mining level (No Clown Planet)
 
 /obj/item/stack/ore/attackby(obj/item/I, mob/user, params)
 	..()
@@ -48,11 +48,11 @@
 			if(istype(thing, /obj/item/storage/bag/ore))
 				OB = thing
 				break
-	if(OB && istype(F, /turf/simulated/floor/plating/airless/asteroid))
+	if(OB && istype(F, /turf/simulated/floor/plating/asteroid))
 		F.attackby(OB, AM)
 	return ..()
 
-/obj/item/stack/ore/fire_act()
+/obj/item/stack/ore/fire_act(datum/gas_mixture/air, exposed_temperature, exposed_volume, global_overlay = TRUE)
 	..()
 	if(isnull(refined_type))
 		return

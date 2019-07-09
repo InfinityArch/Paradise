@@ -118,7 +118,7 @@
 	smoke_system.attach(src)
 	add_cell()
 
-	processing_objects.Add(src)
+	START_PROCESSING(SSobj, src)
 	GLOB.poi_list |= src
 	log_message("[src] created.")
 	GLOB.mechas_list += src //global mech list
@@ -137,6 +137,10 @@
 ////////////////////////
 ////// Helpers /////////
 ////////////////////////
+
+/obj/mecha/get_cell()
+	return cell
+
 /obj/mecha/proc/add_airtank()
 	internal_tank = new /obj/machinery/portable_atmospherics/canister/air(src)
 	return internal_tank
@@ -676,7 +680,7 @@
 		QDEL_NULL(cell)
 		QDEL_NULL(internal_tank)
 
-	processing_objects.Remove(src)
+	STOP_PROCESSING(SSobj, src)
 	GLOB.poi_list.Remove(src)
 	equipment.Cut()
 	cell = null
@@ -727,6 +731,7 @@
 	check_for_internal_damage(list(MECHA_INT_FIRE, MECHA_INT_TEMP_CONTROL, MECHA_INT_CONTROL_LOST, MECHA_INT_SHORT_CIRCUIT), 1)
 
 /obj/mecha/temperature_expose(datum/gas_mixture/air, exposed_temperature, exposed_volume)
+	..()
 	if(exposed_temperature > max_temperature)
 		log_message("Exposed to dangerous temperature.", 1)
 		take_damage(5, "fire")
@@ -1522,6 +1527,8 @@
 	if(occupant_sight_flags)
 		if(user == occupant)
 			user.sight |= occupant_sight_flags
+
+	..()
 
 /obj/mecha/do_attack_animation(atom/A, visual_effect_icon, obj/item/used_item, no_effect, end_pixel_y)
 	if(!no_effect)

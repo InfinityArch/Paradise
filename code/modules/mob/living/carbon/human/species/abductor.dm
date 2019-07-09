@@ -15,9 +15,8 @@
 		"eyes" =     /obj/item/organ/internal/eyes/abductor //3 darksight.
 		)
 
-	species_traits = list(NO_BLOOD, NO_BREATHE, VIRUSIMMUNE, NO_EXAMINE)
-
-	oxy_mod = 0
+	species_traits = list(NO_BLOOD, NO_BREATHE, VIRUSIMMUNE, NOGUNS, NO_EXAMINE)
+	dies_at_threshold = TRUE
 
 	clothing_flags = HAS_UNDERWEAR | HAS_UNDERSHIRT | HAS_SOCKS
 	dietflags = DIET_OMNI

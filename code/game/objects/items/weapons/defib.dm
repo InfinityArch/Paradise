@@ -11,7 +11,6 @@
 	w_class = WEIGHT_CLASS_BULKY
 	origin_tech = "biotech=4"
 	actions_types = list(/datum/action/item_action/toggle_paddles)
-	species_fit = list("Vox")
 	sprite_sheets = list(
 		"Vox" = 'icons/mob/species/vox/back.dmi'
 		)
@@ -22,6 +21,9 @@
 	var/obj/item/twohanded/shockpaddles/paddles
 	var/obj/item/stock_parts/cell/high/bcell = null
 	var/combat = 0 //can we revive through space suits?
+
+/obj/item/defibrillator/get_cell()
+	return bcell
 
 /obj/item/defibrillator/New() //starts without a cell for rnd
 	..()
@@ -40,6 +42,10 @@
 	update_power()
 	update_overlays()
 	update_charge()
+
+/obj/item/defibrillator/examine(mob/user)
+	..(user)
+	to_chat(user,"<span class='notice'>Ctrl-click to remove the paddles from the defibrillator.")
 
 /obj/item/defibrillator/proc/update_power()
 	if(bcell)
@@ -279,7 +285,7 @@
 	user.visible_message("<span class='danger'>[user] is putting the live paddles on [user.p_their()] chest! It looks like [user.p_theyre()] trying to commit suicide.</span>")
 	defib.deductcharge(revivecost)
 	playsound(get_turf(src), 'sound/machines/defib_zap.ogg', 50, 1, -1)
-	return (OXYLOSS)
+	return OXYLOSS
 
 /obj/item/twohanded/shockpaddles/dropped(mob/user as mob)
 	if(user)
@@ -294,8 +300,10 @@
 	return unwield(user)
 
 /obj/item/twohanded/shockpaddles/on_mob_move(dir, mob/user)
-	if(defib && !(defib.Adjacent(user)))
-		defib.remove_paddles(user)
+	if(defib)
+		var/turf/t = get_turf(defib)
+		if(!t.Adjacent(user))
+			defib.remove_paddles(user)
 
 /obj/item/twohanded/shockpaddles/proc/check_defib_exists(mainunit, var/mob/living/carbon/human/M, var/obj/O)
 	if(!mainunit || !istype(mainunit, /obj/item/defibrillator))	//To avoid weird issues from admin spawns
@@ -307,7 +315,7 @@
 
 /obj/item/twohanded/shockpaddles/attack(mob/M, mob/user)
 	var/tobehealed
-	var/threshold = -config.health_threshold_dead
+	var/threshold = -HEALTH_THRESHOLD_DEAD
 	var/mob/living/carbon/human/H = M
 
 	if(busy)
@@ -466,7 +474,7 @@
 
 /obj/item/borg_defib/attack(mob/M, mob/user)
 	var/tobehealed
-	var/threshold = -config.health_threshold_dead
+	var/threshold = -HEALTH_THRESHOLD_DEAD
 	var/mob/living/carbon/human/H = M
 
 	if(busy)
