@@ -65,7 +65,7 @@
 	damage = 15
 	damage_type = TOX
 	nodamage = 0
-	weaken = 5
+	stamina = 50
 	stutter = 5
 
 /obj/item/projectile/energy/bolt/large
