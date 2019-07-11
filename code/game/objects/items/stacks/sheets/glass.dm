@@ -33,6 +33,8 @@ GLOBAL_LIST_INIT(glass_recipes, list ( \
 	full_window = /obj/structure/window/full/basic
 	merge_type = /obj/item/stack/sheet/glass
 	point_value = 1
+	armor = list(melee = 0, bullet = 0, laser = 0, energy = 0, bomb = 0, bio = 0, rad = 0, fire = 50, acid = 100)
+	resistance_flags = ACID_PROOF
 
 /obj/item/stack/sheet/glass/fifty
 	amount = 50
@@ -92,6 +94,8 @@ GLOBAL_LIST_INIT(reinforced_glass_recipes, list ( \
 	full_window = /obj/structure/window/full/reinforced
 	merge_type = /obj/item/stack/sheet/rglass
 	point_value = 4
+	armor = list(melee = 0, bullet = 0, laser = 0, energy = 0, bomb = 0, bio = 0, rad = 0, fire = 70, acid = 100)
+	resistance_flags = ACID_PROOF
 
 /obj/item/stack/sheet/rglass/cyborg
 	materials = list()

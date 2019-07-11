@@ -394,5 +394,5 @@
 	on = TRUE
 	anchored = TRUE
 	var/range = null
-	unacidable = TRUE
-	burn_state = LAVA_PROOF
+	
+	resistance_flags = LAVA_PROOF

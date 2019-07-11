@@ -17,8 +17,7 @@
 	blood_overlay_type = "armor"
 	body_parts_covered = UPPER_TORSO|LOWER_TORSO
 	allowed = list (/obj/item/gun/energy/laser/tag/blue)
-	burn_state = FIRE_PROOF
-
+	resistance_flags = NONE
 	sprite_sheets = list(
 		"Vox" = 'icons/mob/species/vox/suit.dmi'
 		)
@@ -31,8 +30,7 @@
 	blood_overlay_type = "armor"
 	body_parts_covered = UPPER_TORSO|LOWER_TORSO
 	allowed = list (/obj/item/gun/energy/laser/tag/red)
-	burn_state = FIRE_PROOF
-
+	resistance_flags = NONE	
 	sprite_sheets = list(
 		"Vox" = 'icons/mob/species/vox/suit.dmi'
 		)
@@ -138,8 +136,7 @@
 	w_class = WEIGHT_CLASS_NORMAL
 	allowed = list(/obj/item/flashlight,/obj/item/tank/emergency_oxygen,/obj/item/toy)
 	flags_inv = HIDEGLOVES|HIDESHOES|HIDEJUMPSUIT
-	burn_state = FIRE_PROOF
-
+	resistance_flags = NONE
 
 /obj/item/clothing/suit/hastur
 	name = "Hastur's robes"
@@ -148,7 +145,7 @@
 	item_state = "hastur"
 	body_parts_covered = UPPER_TORSO|LOWER_TORSO|LEGS|ARMS
 	flags_inv = HIDEGLOVES|HIDESHOES|HIDEJUMPSUIT
-
+	resistance_flags = NONE
 
 /obj/item/clothing/suit/imperium_monk
 	name = "imperium monk"
@@ -158,6 +155,7 @@
 	body_parts_covered = UPPER_TORSO|LOWER_TORSO|LEGS|ARMS
 	flags_inv = HIDESHOES|HIDEJUMPSUIT
 	allowed = list(/obj/item/storage/bible, /obj/item/nullrod, /obj/item/reagent_containers/food/drinks/bottle/holywater, /obj/item/storage/fancy/candle_box, /obj/item/candle, /obj/item/tank/emergency_oxygen)
+	resistance_flags = NONE
 
 /obj/item/clothing/suit/chickensuit
 	name = "chicken suit"
@@ -580,7 +578,7 @@
 	desc = "A long, thick black leather coat."
 	icon_state = "leathercoat"
 	item_state = "leathercoat"
-	burn_state = FIRE_PROOF
+	
 
 /obj/item/clothing/suit/browncoat
 	name = "brown leather coat"
@@ -789,7 +787,7 @@
 	ignore_suitadjust = 1
 	actions_types = list()
 	adjust_flavour = null
-	burn_state = FIRE_PROOF
+	
 
 /obj/item/clothing/suit/jacket/leather/overcoat
 	name = "leather overcoat"

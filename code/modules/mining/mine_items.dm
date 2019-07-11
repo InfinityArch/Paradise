@@ -5,7 +5,7 @@
 	name = "Light emtter"
 	anchored = 1
 	invisibility = 101
-	unacidable = 1
+	resistance_flags = ACID_PROOF
 	light_range = 8
 	light_power = 0
 

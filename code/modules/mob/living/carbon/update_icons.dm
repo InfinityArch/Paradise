@@ -34,6 +34,9 @@
 /mob/living/carbon/proc/handle_transform_change()
 	return
 
+/obj/item/proc/worn_overlays(isinhands = FALSE, icon_file)
+	return
+
 //update whether handcuffs appears on our hud.
 /mob/living/carbon/proc/update_hud_handcuffed()
 	if(hud_used)

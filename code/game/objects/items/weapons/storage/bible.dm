@@ -5,10 +5,11 @@
 	throw_speed = 1
 	throw_range = 5
 	w_class = WEIGHT_CLASS_NORMAL
-	burn_state = FLAMMABLE
+	resistance_flags = FLAMMABLE
 	var/mob/affecting = null
 	var/deity_name = "Christ"
-
+	resistance_flags = FLAMMABLE
+	
 /obj/item/storage/bible/suicide_act(mob/user)
 	to_chat(viewers(user), "<span class='warning'><b>[user] stares into [src.name] and attempts to transcend understanding of the universe!</b></span>")
 	user.dust()

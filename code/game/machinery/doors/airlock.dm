@@ -44,6 +44,7 @@ var/list/airlock_overlays = list()
 	icon = 'icons/obj/doors/airlocks/station/public.dmi'
 	icon_state = "closed"
 	anchored = 1
+	obj_integrity = 300
 	max_integrity = 300
 	integrity_failure = 70
 	damage_deflection = AIRLOCK_DAMAGE_DEFLECTION_N
@@ -52,6 +53,7 @@ var/list/airlock_overlays = list()
 	assemblytype = /obj/structure/door_assembly
 	normalspeed = 1
 	siemens_strength = 1
+	var/normal_integrity = AIRLOCK_INTEGRITY_N
 	var/security_level = 0 //How much are wires secured
 	var/aiControlDisabled = FALSE //If TRUE, AI control is disabled until the AI hacks back in and disables the lock. If 2, the AI has bypassed the lock. If -1, the control is enabled but the AI had bypassed it earlier, so if it is disabled again the AI would have no trouble getting back in.
 	var/hackProof = FALSE // if TRUE, this door can't be hacked by the AI
@@ -77,7 +79,6 @@ var/list/airlock_overlays = list()
 	var/airlock_material //material of inner filling; if its an airlock with glass, this should be set to "glass"
 	var/overlays_file = 'icons/obj/doors/airlocks/station/overlays.dmi'
 	var/note_overlay_file = 'icons/obj/doors/airlocks/station/overlays.dmi' //Used for papers and photos pinned to the airlock
-	var/normal_integrity = AIRLOCK_INTEGRITY_N
 	var/prying_so_hard = FALSE
 
 	var/image/old_frame_overlay //keep those in order to prevent unnecessary updating
@@ -124,11 +125,8 @@ About the new airlock wires panel:
 	if(glass)
 		airlock_material = "glass"
 	if(security_level > AIRLOCK_SECURITY_METAL)
-		obj_integrity = normal_integrity * AIRLOCK_INTEGRITY_MULTIPLIER
-		max_integrity = normal_integrity * AIRLOCK_INTEGRITY_MULTIPLIER
-	else
-		obj_integrity = normal_integrity
-		max_integrity = normal_integrity
+		obj_integrity = obj_integrity * AIRLOCK_INTEGRITY_MULTIPLIER
+		max_integrity = obj_integrity * AIRLOCK_INTEGRITY_MULTIPLIER
 	if(damage_deflection == AIRLOCK_DAMAGE_DEFLECTION_N && security_level > AIRLOCK_SECURITY_METAL)
 		damage_deflection = AIRLOCK_DAMAGE_DEFLECTION_R
 	update_icon()
@@ -1203,6 +1201,8 @@ About the new airlock wires panel:
 	if(locked || welded) //Extremely generic, as aliens only understand the basics of how airlocks work.
 		to_chat(user, "<span class='warning'>[src] refuses to budge!</span>")
 		return
+	if (user.a_intent == INTENT_HARM)
+		return ..()
 	user.visible_message("<span class='warning'>[user] begins prying open [src].</span>",\
 						"<span class='noticealien'>You begin digging your claws into [src] with all your might!</span>",\
 						"<span class='warning'>You hear groaning metal...</span>")
@@ -1252,7 +1252,7 @@ About the new airlock wires panel:
 		safe = TRUE
 
 /obj/machinery/door/airlock/obj_break(damage_flag)
-	if(!(flags & BROKEN) && can_deconstruct)
+	if(!(flags & BROKEN) && !(flags & NODECONSTRUCT))
 		stat |= BROKEN
 		if(!panel_open)
 			panel_open = TRUE
@@ -1265,7 +1265,7 @@ About the new airlock wires panel:
 		update_icon()
 
 /obj/machinery/door/airlock/deconstruct(disassembled = TRUE, mob/user)
-	if(can_deconstruct)
+	if(!(flags & NODECONSTRUCT))
 		var/obj/structure/door_assembly/DA
 		if(assemblytype)
 			DA = new assemblytype(loc)

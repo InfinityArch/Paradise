@@ -170,9 +170,9 @@ var/global/list/datum/stack_recipe/snow_recipes = list(
 	origin_tech = "plasmatech=2;materials=2"
 	sheettype = "plasma"
 	materials = list(MAT_PLASMA=MINERAL_MATERIAL_AMOUNT)
-	burn_state = FLAMMABLE
-	burntime = 5
-	point_value = 20
+	resistance_flags = FLAMMABLE
+	obj_integrity = 100
+	max_integrity = 100
 
 /obj/item/stack/sheet/mineral/plasma/New()
 	..()
@@ -187,7 +187,7 @@ var/global/list/datum/stack_recipe/snow_recipes = list(
 	else
 		return ..()
 
-/obj/item/stack/sheet/mineral/plasma/fire_act(datum/gas_mixture/air, exposed_temperature, exposed_volume, global_overlay = TRUE)
+/obj/item/stack/sheet/mineral/plasma/fire_act(exposed_temperature,exposed_volume)
 	..()
 	atmos_spawn_air(SPAWN_HEAT | SPAWN_TOXINS, amount*10)
 	qdel(src)

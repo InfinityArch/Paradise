@@ -392,7 +392,7 @@
 	C.color = "#000080"
 	C.max_heat_protection_temperature = FIRE_IMMUNITY_MAX_TEMP_PROTECT
 	C.heat_protection = C.body_parts_covered
-	C.burn_state = FIRE_PROOF
+	C.resistance_flags |= FIRE_PROOF
 	uses --
 	if(!uses)
 		qdel(src)
@@ -412,7 +412,7 @@
 	layer = FLY_LAYER
 	pixel_x = -64
 	pixel_y = -64
-	unacidable = 1
+	resistance_flags = ACID_PROOF
 	mouse_opacity = MOUSE_OPACITY_TRANSPARENT
 	var/mob/living/immune = list() // the one who creates the timestop is immune
 	var/list/stopped_atoms = list()

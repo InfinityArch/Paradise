@@ -30,7 +30,7 @@
 //Cult versions cuase fuck map conflicts
 /obj/structure/cult/functional
 	var/cooldowntime = 0
-	var/health = 100
+	obj_integrity = 100
 	var/death_message = "<span class='warning'>The structure falls apart.</span>" //The message shown when the structure is destroyed
 	var/death_sound = 'sound/items/bikehorn.ogg'
 	var/heathen_message = "You're a huge nerd, go away. Also, a coder forgot to put a message here."
@@ -42,7 +42,7 @@
 	)
 	var/creation_message = "A dank smoke comes out, and you pass out. When you come to, you notice a %ITEM%!"
 
-/obj/structure/cult/functional/proc/destroy_structure()
+/obj/structure/cult/functional/deconstruct()
 	visible_message(death_message)
 	playsound(src, death_sound, 50, 1)
 	qdel(src)
@@ -68,23 +68,6 @@
 			icon_state = initial(icon_state)
 	else
 		return ..()
-
-/obj/structure/cult/functional/proc/updatehealth()
-	if(health <= 0)
-		destroy_structure()
-
-/obj/structure/cult/functional/take_damage(damage, damage_type = BRUTE)
-	if(damage_type == BRUTE || damage_type == BURN)
-		health -= damage
-		updatehealth()
-
-/obj/structure/cult/functional/attackby(obj/item/I, mob/living/user)
-	..()
-	take_damage(I.force, I.damtype)
-	playsound(loc, I.hitsound, 80, 1)
-
-/obj/structure/cult/functional/bullet_act(var/obj/item/projectile/P)
-	take_damage(P.damage, P.damage_type)
 
 /obj/structure/cult/functional/attack_hand(mob/living/user)
 	if(!iscultist(user))
@@ -115,7 +98,7 @@
 	name = "altar"
 	desc = "A bloodstained altar dedicated to a cult."
 	icon_state = "talismanaltar"
-	health = 150 //Sturdy
+	obj_integrity = 150 //Sturdy
 	death_message = "<span class='warning'>The altar breaks into splinters, releasing a cascade of spirits into the air!</span>"
 	death_sound = 'sound/effects/altar_break.ogg'
 	heathen_message = "<span class='warning'>There is a foreboding aura to the altar and you want nothing to do with it.</span>"
@@ -129,7 +112,7 @@
 	name = "daemon forge"
 	desc = "A forge used in crafting the unholy weapons used by the armies of a cult."
 	icon_state = "forge"
-	health = 300 //Made of metal
+	obj_integrity = 300 //Made of metal
 	death_message = "<span class='warning'>The forge falls apart, its lava cooling and winking away!</span>"
 	death_sound = 'sound/effects/forge_destroy.ogg'
 	heathen_message = "<span class='warning'>Your hand feels like it's melting off as you try to touch the forge.</span>"
@@ -180,7 +163,7 @@ var/list/blacklisted_pylon_turfs = typecacheof(list(
 	icon_state = "pylon"
 	light_range = 5
 	light_color = "#3e0000"
-	health = 50 //Very fragile
+	obj_integrity = 50 //Very fragile
 	death_message = "<span class='warning'>The pylon's crystal vibrates and glows fiercely before violently shattering!</span>"
 	death_sound = 'sound/effects/pylon_shatter.ogg'
 
@@ -247,7 +230,7 @@ var/list/blacklisted_pylon_turfs = typecacheof(list(
 	name = "archives"
 	desc = "A desk covered in arcane manuscripts and tomes in unknown languages. Looking at the text makes your skin crawl."
 	icon_state = "tomealtar"
-	health = 125 //Slightly sturdy
+	obj_integrity = 125 //Slightly sturdy
 	death_message = "<span class='warning'>The desk breaks apart, its books falling to the floor.</span>"
 	death_sound = 'sound/effects/wood_break.ogg'
 	heathen_message = "<span class='cultlarge'>What do you hope to seek?</span>"
@@ -263,7 +246,7 @@ var/list/blacklisted_pylon_turfs = typecacheof(list(
 	icon = 'icons/obj/cult.dmi'
 	icon_state = "hole"
 	density = 1
-	unacidable = 1
+	resistance_flags = ACID_PROOF
 	anchored = 1.0
 
 /obj/effect/gateway/Bumped(mob/M as mob|obj)

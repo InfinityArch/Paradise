@@ -9,10 +9,11 @@
 	flags = ON_BORDER
 	opacity = 0
 	dir = EAST
-	max_integrity = 150 //If you change this, consider changing ../door/window/brigdoor/ max_integrity at the bottom of this .dm file
+	resistance_flags = ACID_PROOF
+	obj_integrity = 150 //If you change this, consider changing ../door/window/brigdoor/ health at the bottom of this .dm file
+	max_integrity = 150
 	integrity_failure = 0
-	armor = list(melee = 20, bullet = 50, laser = 50, energy = 50, bomb = 10, bio = 100, rad = 100)
-	unacidable = 1
+	armor = list(melee = 20, bullet = 50, laser = 50, energy = 50, bomb = 10, bio = 100, rad = 100, fire = 70, acid = 100)
 	var/obj/item/airlock_electronics/electronics
 	var/base_state = "left"
 	var/reinf = 0
@@ -186,7 +187,7 @@
 
 
 /obj/machinery/door/window/deconstruct(disassembled = TRUE)
-	if(can_deconstruct && !disassembled)
+	if(!(flags & NODECONSTRUCT) && !disassembled)
 		for(var/obj/fragment in debris)
 			fragment.forceMove(get_turf(src))
 			transfer_fingerprints_to(fragment)
@@ -234,7 +235,7 @@
 
 	add_fingerprint(user)
 
-	if(can_deconstruct)
+	if(!(flags & NODECONSTRUCT))
 		if(isscrewdriver(I))
 			if(density || operating)
 				to_chat(user, "<span class='warning'>You need to open the door to access the maintenance panel!</span>")
@@ -335,7 +336,7 @@
 	base_state = "clockwork"
 	shards = 0
 	rods = 0
-	burn_state = FIRE_PROOF
+	
 	cancolor = FALSE
 	var/made_glow = FALSE
 

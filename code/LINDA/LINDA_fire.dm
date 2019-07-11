@@ -47,7 +47,7 @@
 /obj/effect/hotspot
 	anchored = 1
 	mouse_opacity = MOUSE_OPACITY_TRANSPARENT
-	unacidable = 1//So you can't melt fire with acid.
+	resistance_flags = ACID_PROOF//So you can't melt fire with acid.
 	icon = 'icons/goonstation/effects/fire.dmi'
 	icon_state = "1"
 	layer = MASSIVE_OBJ_LAYER
@@ -93,9 +93,9 @@
 		location.assume_air(affected)
 
 	for(var/A in loc)
-		var/atom/item = A
-		if(item && item != src) // It's possible that the item is deleted in temperature_expose
-			item.fire_act(null, temperature, volume)
+		var/atom/AT = A
+		if(AT && AT != src) // It's possible that the item is deleted in temperature_expose
+			AT.fire_act(temperature, volume)
 
 	color = heat2color(temperature)
 	set_light(l_color = color)
@@ -192,7 +192,7 @@
 /obj/effect/hotspot/Crossed(mob/living/L)
 	..()
 	if(isliving(L))
-		L.fire_act()
+		L.fire_act(temperature, volume)
 
 /obj/effect/hotspot/fake // Largely for the fireflash procs below
 	fake = TRUE

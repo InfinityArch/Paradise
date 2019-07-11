@@ -142,7 +142,7 @@
 	icon = 'icons/obj/biomass.dmi'
 	icon_state = "rift"
 	density = 1
-	unacidable = 1
+	resistance_flags = ACID_PROOF
 	anchored = 1.0
 	var/spawn_path = /mob/living/simple_animal/cow //defaulty cows to prevent unintentional narsies
 	var/spawn_amt_left = 20
@@ -773,8 +773,9 @@ var/global/list/multiverse = list()
 	var/obj/item/link = null
 	var/cooldown_time = 30 //3s
 	var/cooldown = 0
-	burntime = 0
-	burn_state = FLAMMABLE
+	obj_integrity = 10
+	max_integrity = 10
+	resistance_flags = FLAMMABLE
 
 /obj/item/voodoo/attackby(obj/item/I as obj, mob/user as mob, params)
 	if(target && cooldown < world.time)
@@ -872,7 +873,7 @@ var/global/list/multiverse = list()
 		var/area/A = get_area(src)
 		to_chat(victim, "<span class='notice'>You feel a dark presence from [A.name]</span>")
 
-/obj/item/voodoo/fire_act(datum/gas_mixture/air, exposed_temperature, exposed_volume, global_overlay = TRUE)
+/obj/item/voodoo/fire_act(exposed_temperature, exposed_volume)
 	if(target)
 		target.adjust_fire_stacks(20)
 		target.IgniteMob()

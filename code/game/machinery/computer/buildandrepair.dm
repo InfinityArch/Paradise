@@ -11,8 +11,13 @@
 //	weight = 1.0E8
 
 /obj/structure/computerframe/deconstruct(disassembled = TRUE)
-	drop_computer_parts()
-	return ..() // will qdel the frame
+	if(!(flags & NODECONSTRUCT))
+		if(state == 4)
+			new /obj/item/shard(loc)
+			new /obj/item/shard(loc)
+		if(state >= 3)
+			new /obj/item/stack/cable_coil(loc , 5)
+	qdel(src)
 
 /obj/structure/computerframe/obj_break(damage_flag)
 	deconstruct()
@@ -452,6 +457,7 @@
 					to_chat(user, "<span class='notice'>You wrench the frame into place.</span>")
 					anchored = 1
 					state = 1
+				return
 			if(istype(P, /obj/item/weldingtool))
 				var/obj/item/weldingtool/WT = P
 				if(!WT.remove_fuel(0, user))
@@ -461,7 +467,10 @@
 				if(do_after(user, 20 * WT.toolspeed, target = src))
 					if(!src || !WT.isOn()) return
 					to_chat(user, "<span class='notice'>You deconstruct the frame.</span>")
-					deconstruct(TRUE)
+					var/obj/item/stack/sheet/metal/M = new (drop_location(), 5)
+					M.add_fingerprint(user)
+					qdel(src)
+				return
 		if(1)
 			if(istype(P, /obj/item/wrench))
 				playsound(loc, P.usesound, 50, 1)
@@ -469,6 +478,7 @@
 					to_chat(user, "<span class='notice'>You unfasten the frame.</span>")
 					anchored = 0
 					state = 0
+				return
 			if(istype(P, /obj/item/circuitboard) && !circuit)
 				var/obj/item/circuitboard/B = P
 				if(B.board_type == "computer")
@@ -478,13 +488,16 @@
 					circuit = P
 					user.drop_item()
 					P.loc = src
+					return
 				else
 					to_chat(user, "<span class='warning'>This frame does not accept circuit boards of this type!</span>")
+					return
 			if(istype(P, /obj/item/screwdriver) && circuit)
 				playsound(loc, P.usesound, 50, 1)
 				to_chat(user, "<span class='notice'>You screw the circuit board into place.</span>")
 				state = 2
 				icon_state = "2"
+				return
 			if(istype(P, /obj/item/crowbar) && circuit)
 				playsound(loc, P.usesound, 50, 1)
 				to_chat(user, "<span class='notice'>You remove the circuit board.</span>")
@@ -492,12 +505,14 @@
 				icon_state = "0"
 				circuit.loc = loc
 				circuit = null
+				return
 		if(2)
 			if(istype(P, /obj/item/screwdriver) && circuit)
 				playsound(loc, P.usesound, 50, 1)
 				to_chat(user, "<span class='notice'>You unfasten the circuit board.</span>")
 				state = 1
 				icon_state = "1"
+				return
 			if(istype(P, /obj/item/stack/cable_coil))
 				var/obj/item/stack/cable_coil/C = P
 				if(C.amount >= 5)
@@ -513,7 +528,7 @@
 							return
 				else
 					to_chat(user, "<span class='warning'>You need five lengths of cable to wire the frame.</span>")
-					return
+				return
 		if(3)
 			if(istype(P, /obj/item/wirecutters))
 				playsound(loc, P.usesound, 50, 1)
@@ -522,6 +537,7 @@
 				icon_state = "2"
 				var/obj/item/stack/cable_coil/A = new /obj/item/stack/cable_coil( loc )
 				A.amount = 5
+				return
 
 			if(istype(P, /obj/item/stack/sheet/glass))
 				var/obj/item/stack/sheet/glass/G = P
@@ -533,6 +549,7 @@
 							to_chat(user, "<span class='notice'>You put in the glass panel.</span>")
 							state = 4
 							icon_state = "4"
+							return
 						else
 							to_chat(user, "<span class='warning'>At some point during construction you lost some glass. Make sure you have two sheets before trying again.</span>")
 							return
@@ -546,6 +563,7 @@
 				state = 3
 				icon_state = "3"
 				new /obj/item/stack/sheet/glass(loc, 2)
+				return
 			if(istype(P, /obj/item/screwdriver))
 				playsound(loc, P.usesound, 50, 1)
 				to_chat(user, "<span class='notice'>You connect the monitor.</span>")
@@ -559,6 +577,9 @@
 					var/obj/item/circuitboard/supplycomp/C = circuit
 					SC.can_order_contraband = C.contraband_enabled
 				qdel(src)
+				return
+	if (user.a_intent == INTENT_HARM)
+		return ..()
 
 
 
@@ -585,7 +606,9 @@
 				if(do_after(user, 20 * WT.toolspeed, target = src))
 					if(!src || !WT.isOn()) return
 					to_chat(user, "<span class='notice'>You deconstruct the frame.</span>")
-					deconstruct(TRUE)
+					var/obj/item/stack/sheet/metal/M = new (drop_location(), 5)
+					M.add_fingerprint(user)
+					qdel(src)
 		if(1)
 			if(istype(P, /obj/item/wrench))
 				playsound(loc, P.usesound, 50, 1)

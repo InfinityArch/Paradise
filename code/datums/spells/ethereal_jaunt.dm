@@ -12,7 +12,7 @@
 	include_user = 1
 	nonabstract_req = 1
 	centcom_cancast = 0 //Prevent people from getting to centcom
-
+	resistance_flags = LAVA_PROOF | FIRE_PROOF | UNACIDABLE | ACID_PROOF
 	var/jaunt_duration = 50 //in deciseconds
 	var/jaunt_in_time = 5
 	var/jaunt_in_type = /obj/effect/temp_visual/wizard
@@ -78,7 +78,7 @@
 	density = 0
 	anchored = 1
 	invisibility = 60
-	burn_state = LAVA_PROOF
+	resistance_flags = LAVA_PROOF
 
 /obj/effect/dummy/spell_jaunt/Destroy()
 	// Eject contents if deleted somehow

@@ -9,7 +9,8 @@
 	pressure_resistance = 5*ONE_ATMOSPHERE
 	layer = BELOW_OBJ_LAYER
 	level = 3
-	armor = list(melee = 50, bullet = 70, laser = 70, energy = 100, bomb = 10, bio = 100, rad = 100)
+	armor = list(melee = 50, bullet = 70, laser = 70, energy = 100, bomb = 10, bio = 100, rad = 100,acid = 0)
+	obj_integrity = 50
 	max_integrity = 50
 	integrity_failure = 20
 	var/rods_type = /obj/item/stack/rods
@@ -42,17 +43,6 @@
 	//height=42
 	icon='icons/fence-ns.dmi'
 
-/obj/structure/grille/ex_act(severity)
-	switch(severity)
-		if(1)
-			qdel(src)
-		else
-			take_damage(rand(5,10), BRUTE, 0)
-
-/obj/structure/grille/blob_act()
-	if(!broken)
-		obj_break()
-
 /obj/structure/grille/examine(mob/user)
 	..()
 	if(anchored)
@@ -74,10 +64,7 @@
 		shock(user, 70)
 		shockcooldown = world.time + my_shockcooldown
 
-/obj/structure/grille/hulk_damage()
-	return 60
-
-/obj/structure/grille/attack_hulk(mob/living/carbon/human/user, does_attack_animation = FALSE)
+/obj/structure/grille/attack_hulk(mob/living/carbon/human/user)
 	if(user.a_intent == INTENT_HARM)
 		if(!shock(user, 70))
 			..(user, TRUE)
@@ -227,14 +214,14 @@
 /obj/structure/grille/deconstruct(disassembled = TRUE)
 	if(!loc) //if already qdel'd somehow, we do nothing
 		return
-	if(can_deconstruct)
+	if(!(flags & NODECONSTRUCT))
 		var/obj/R = new rods_type(loc, rods_amount)
 		transfer_fingerprints_to(R)
 		qdel(src)
 	..()
 
 /obj/structure/grille/obj_break()
-	if(!broken && can_deconstruct)
+	if(!broken && !(flags & NODECONSTRUCT))
 		new broken_type(loc)
 		var/obj/R = new rods_type(loc, rods_broken)
 		transfer_fingerprints_to(R)

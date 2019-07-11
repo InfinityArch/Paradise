@@ -22,7 +22,9 @@
 	layer = TABLE_LAYER
 	pass_flags = LETPASSTHROW
 	climbable = TRUE
+	obj_integrity = 100
 	max_integrity = 100
+	resistance_flags = NONE
 	integrity_failure = 30
 	smooth = SMOOTH_TRUE
 	canSmoothWith = list(/obj/structure/table, /obj/structure/table/reinforced)
@@ -204,7 +206,7 @@
 	if(istype(I, /obj/item/grab))
 		tablepush(I, user)
 		return
-	if(can_deconstruct)
+	if(!(flags & NODECONSTRUCT))
 		if(isscrewdriver(I) && deconstruction_ready)
 			to_chat(user, "<span class='notice'>You start disassembling [src]...</span>")
 			playsound(loc, I.usesound, 50, 1)
@@ -238,7 +240,7 @@
 		return ..()
 
 /obj/structure/table/deconstruct(disassembled = TRUE, wrench_disassembly = 0)
-	if(can_deconstruct)
+	if(!(flags & NODECONSTRUCT))
 		var/turf/T = get_turf(src)
 		new buildstack(T, buildstackamount)
 		if(!wrench_disassembly)
@@ -362,8 +364,10 @@
 	icon = 'icons/obj/smooth_structures/glass_table.dmi'
 	icon_state = "glass_table"
 	buildstack = /obj/item/stack/sheet/glass
+	obj_integrity = 70
 	max_integrity = 70
-	unacidable = 1
+	resistance_flags = ACID_PROOF
+	armor = list(melee = 0, bullet = 0, laser = 0, energy = 0, bomb = 0, bio = 0, rad = 0, fire = 80, acid = 100)
 	canSmoothWith = null
 	var/list/debris = list()
 
@@ -379,7 +383,7 @@
 
 /obj/structure/table/glass/Crossed(atom/movable/AM)
 	. = ..()
-	if(!can_deconstruct)
+	if(!!(flags & NODECONSTRUCT))
 		return
 	if(!isliving(AM))
 		return
@@ -415,7 +419,7 @@
 	qdel(src)
 
 /obj/structure/table/glass/deconstruct(disassembled = TRUE, wrench_disassembly = 0)
-	if(can_deconstruct)
+	if(!(flags & NODECONSTRUCT))
 		if(disassembled)
 			..()
 			return
@@ -444,10 +448,10 @@
 	frame = /obj/structure/table_frame/wood
 	framestack = /obj/item/stack/sheet/wood
 	buildstack = /obj/item/stack/sheet/wood
+	resistance_flags = FLAMMABLE
+	obj_integrity = 70
 	max_integrity = 70
 	canSmoothWith = list(/obj/structure/table/wood, /obj/structure/table/wood/poker)
-	burn_state = FLAMMABLE
-	burntime = 20
 
 /obj/structure/table/wood/narsie_act(total_override = TRUE)
 	if(!total_override)
@@ -500,9 +504,10 @@
 	deconstruction_ready = FALSE
 	buildstack = /obj/item/stack/sheet/plasteel
 	canSmoothWith = list(/obj/structure/table/reinforced, /obj/structure/table)
+	obj_integrity = 200
 	max_integrity = 200
 	integrity_failure = 50
-	armor = list(melee = 10, bullet = 30, laser = 30, energy = 100, bomb = 20, bio = 0, rad = 0)
+	armor = list(melee = 10, bullet = 30, laser = 30, energy = 100, bomb = 20, bio = 0, rad = 0, fire = 80, acid = 70)
 
 /obj/structure/table/reinforced/deconstruction_hints(mob/user)
 	if(deconstruction_ready)
@@ -543,7 +548,7 @@
 	desc = "A solid, slightly beveled brass table."
 	icon = 'icons/obj/smooth_structures/brass_table.dmi'
 	icon_state = "brass_table"
-	burn_state = FIRE_PROOF
+	
 	frame = /obj/structure/table_frame/brass
 	framestack = /obj/item/stack/tile/brass
 	buildstack = /obj/item/stack/tile/brass
@@ -610,7 +615,7 @@
 		held_items += item.UID()
 
 /obj/structure/table/tray/deconstruct(disassembled = TRUE, wrench_disassembly = 0)
-	if(can_deconstruct)
+	if(!(flags & NODECONSTRUCT))
 		var/turf/T = get_turf(src)
 		new buildstack(T, buildstackamount)
 	qdel(src)
@@ -640,10 +645,11 @@
 	anchored = TRUE
 	pass_flags = LETPASSTHROW
 	max_integrity = 20
+	obj_integrity = 20
 
 /obj/structure/rack/examine(mob/user)
-	..()
 	to_chat(user, "<span class='notice'>It's held together by a couple of <b>bolts</b>.</span>")
+	..()
 
 /obj/structure/rack/CanPass(atom/movable/mover, turf/target, height=0)
 	if(height==0)
@@ -674,7 +680,7 @@
 		step(O, get_dir(O, src))
 
 /obj/structure/rack/attackby(obj/item/W, mob/user, params)
-	if(iswrench(W) && can_deconstruct)
+	if(iswrench(W) && !(flags & NODECONSTRUCT))
 		playsound(loc, W.usesound, 50, 1)
 		deconstruct(TRUE)
 		return
@@ -723,7 +729,7 @@
  */
 
 /obj/structure/rack/deconstruct(disassembled = TRUE)
-	if(can_deconstruct)
+	if(!(flags & NODECONSTRUCT))
 		density = FALSE
 		var/obj/item/rack_parts/newparts = new(loc)
 		transfer_fingerprints_to(newparts)

@@ -9,6 +9,7 @@
 	slot_flags = SLOT_BELT
 	attack_verb = list("whipped", "lashed", "disciplined")
 	var/use_item_overlays = 0 // Do we have overlays for items held inside the belt?
+	resistance_flags = NONE
 
 /obj/item/storage/belt/update_icon()
 	if(use_item_overlays)
@@ -45,6 +46,7 @@
 	desc = "Can hold various tools."
 	icon_state = "utilitybelt"
 	item_state = "utility"
+	resistance_flags = FIRE_PROOF
 	use_item_overlays = 1
 	can_hold = list(
 		/obj/item/crowbar,

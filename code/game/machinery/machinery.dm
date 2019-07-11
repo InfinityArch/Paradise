@@ -98,6 +98,9 @@ Class Procs:
 	icon = 'icons/obj/stationobjs.dmi'
 	pressure_resistance = 10
 	layer = BELOW_OBJ_LAYER
+	obj_integrity = 200
+	max_integrity = 200
+	armor = list(melee = 25, bullet = 10, laser = 10, energy = 0, bomb = 0, bio = 0, rad = 0, fire = 50, acid = 70)
 	var/stat = 0
 	var/emagged = 0
 	var/use_power = IDLE_POWER_USE
@@ -175,26 +178,6 @@ Class Procs:
 		use_power(7500/severity)
 		new /obj/effect/temp_visual/emp(loc)
 	..()
-
-/obj/machinery/ex_act(severity)
-	switch(severity)
-		if(1.0)
-			qdel(src)
-			return
-		if(2.0)
-			if(prob(50))
-				qdel(src)
-				return
-		if(3.0)
-			if(prob(25))
-				qdel(src)
-				return
-		else
-	return
-
-/obj/machinery/blob_act()
-	if(prob(50))
-		qdel(src)
 
 //sets the use_power var and then forces an area power update
 /obj/machinery/proc/update_use_power(var/new_use_power)
@@ -398,7 +381,7 @@ Class Procs:
 	return 0
 
 /obj/machinery/deconstruct(disassembled = TRUE)
-	if(can_deconstruct)
+	if(!(flags & NODECONSTRUCT))
 		on_deconstruction()
 		if(component_parts && component_parts.len)
 			spawn_frame(disassembled)
@@ -417,7 +400,7 @@ Class Procs:
 	M.icon_state = "box_1"
 
 /obj/machinery/obj_break(damage_flag)
-	if(can_deconstruct)
+	if(!(flags & NODECONSTRUCT))
 		stat |= BROKEN
 
 /obj/machinery/proc/default_deconstruction_screwdriver(var/mob/user, var/icon_state_open, var/icon_state_closed, var/obj/item/screwdriver/S)
@@ -499,7 +482,7 @@ Class Procs:
 	if(stat & BROKEN)
 		to_chat(user, "<span class='notice'>It looks broken and non-functional.</span>")
 	if(!(resistance_flags & INDESTRUCTIBLE))
-		if(burn_state == ON_FIRE)
+		if(resistance_flags & ON_FIRE)
 			to_chat(user, "<span class='warning'>It's on fire!</span>")
 		var/healthpercent = (obj_integrity/max_integrity) * 100
 		switch(healthpercent)

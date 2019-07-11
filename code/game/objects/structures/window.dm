@@ -32,6 +32,7 @@ var/global/wcCommon = pick(list("#379963", "#0d8395", "#58b5c3", "#49e46e", "#8f
 	flags = ON_BORDER
 	can_be_unanchored = TRUE
 	max_integrity = 25
+	obj_integrity = 25
 	var/ini_dir = null
 	var/state = WINDOW_OUT_OF_FRAME
 	var/reinf = FALSE
@@ -47,6 +48,8 @@ var/global/wcCommon = pick(list("#379963", "#0d8395", "#58b5c3", "#49e46e", "#8f
 	var/real_explosion_block	//ignore this, just use explosion_block
 	var/breaksound = "shatter"
 	var/hitsound = 'sound/effects/Glasshit.ogg'
+	resistance_flags = ACID_PROOF
+	armor = list(melee = 0, bullet = 0, laser = 0, energy = 0, bomb = 0, bio = 0, rad = 0, fire = 80, acid = 100)
 
 /obj/structure/window/examine(mob/user)
 	..()
@@ -176,7 +179,7 @@ var/global/wcCommon = pick(list("#379963", "#0d8395", "#58b5c3", "#49e46e", "#8f
 	add_fingerprint(user)
 	playsound(src, 'sound/effects/glassknock.ogg', 50, 1)
 
-/obj/structure/window/attack_hulk(mob/living/carbon/human/user, does_attack_animation = 0)
+/obj/structure/window/attack_hulk(mob/living/carbon/human/user)
 	if(!can_be_reached(user))
 		return 1
 	. = ..()
@@ -254,7 +257,7 @@ var/global/wcCommon = pick(list("#379963", "#0d8395", "#58b5c3", "#49e46e", "#8f
 					take_damage(75)
 			return
 
-	if(can_deconstruct)
+	if(!(flags & NODECONSTRUCT))
 		if(isscrewdriver(I))
 			playsound(src, I.usesound, 75, 1)
 			if(reinf)
@@ -342,7 +345,7 @@ var/global/wcCommon = pick(list("#379963", "#0d8395", "#58b5c3", "#49e46e", "#8f
 		return
 	if(!disassembled)
 		playsound(src, breaksound, 70, 1)
-		if(can_deconstruct)
+		if(!(flags & NODECONSTRUCT))
 			for(var/i in debris)
 				var/obj/item/I = i
 				I.forceMove(loc)
@@ -478,7 +481,7 @@ var/global/wcCommon = pick(list("#379963", "#0d8395", "#58b5c3", "#49e46e", "#8f
 	reinf = TRUE
 	cancolor = TRUE
 	heat_resistance = 1600
-	armor = list("melee" = 50, "bullet" = 0, "laser" = 0, "energy" = 0, "bomb" = 25, "bio" = 100, "rad" = 100)
+	armor = list(melee = 50, bullet = 0, laser = 0, energy = 0, bomb = 25, bio = 100, rad = 100, fire = 80, acid = 100)
 	max_integrity = 50
 	explosion_block = 1
 	glass_type = /obj/item/stack/sheet/rglass
@@ -656,7 +659,7 @@ obj/structure/window/full/reinforced/ice
 	reinf = TRUE
 	heat_resistance = 1600
 	explosion_block = 3
-	armor = list("melee" = 50, "bullet" = 0, "laser" = 0, "energy" = 0, "bomb" = 50, "bio" = 100, "rad" = 100)
+	armor = list(melee = 50, bullet = 0, laser = 0, energy = 0, bomb = 25, bio = 100, rad = 100, fire = 80, acid = 100)
 	smooth = SMOOTH_TRUE
 	canSmoothWith = null
 	glass_type = /obj/item/stack/sheet/titaniumglass
@@ -690,8 +693,8 @@ obj/structure/window/full/reinforced/ice
 	desc = "A paper-thin pane of translucent yet reinforced brass."
 	icon = 'icons/obj/smooth_structures/clockwork_window.dmi'
 	icon_state = "clockwork_window_single"
-	burn_state = FIRE_PROOF
-	unacidable = 1
+	
+	resistance_flags = ACID_PROOF
 	max_integrity = 80
 	armor = list("melee" = 60, "bullet" = 25, "laser" = 0, "energy" = 0, "bomb" = 25, "bio" = 100, "rad" = 100)
 	explosion_block = 2 //fancy AND hard to destroy. the most useful combination.

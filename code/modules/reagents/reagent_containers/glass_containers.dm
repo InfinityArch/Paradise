@@ -13,7 +13,7 @@
 	volume = 50
 	container_type = OPENCONTAINER
 	has_lid = TRUE
-
+	resistance_flags = ACID_PROOF
 	var/label_text = ""
 	// the fucking asshole who designed this can go die in a fire - Iamgoofball
 	var/list/can_be_placed_into = list(
@@ -302,6 +302,7 @@
 	amount_per_transfer_from_this = 10
 	origin_tech = "materials=2;engineering=3;plasmatech=3"
 	container_type = OPENCONTAINER
+	isGlass = FALSE
 
 /obj/item/reagent_containers/glass/beaker/noreact/New()
 	..()
@@ -317,6 +318,7 @@
 	possible_transfer_amounts = list(5,10,15,25,30,50,100,300)
 	container_type = OPENCONTAINER
 	origin_tech = "bluespace=5;materials=4;plasmatech=4"
+	isGlass = FALSE
 
 /obj/item/reagent_containers/glass/beaker/cryoxadone
 	list_reagents = list("cryoxadone" = 30)
@@ -343,7 +345,8 @@
 	amount_per_transfer_from_this = 20
 	possible_transfer_amounts = list(5,10,15,20,25,30,50,80,100,120)
 	volume = 120
-	armor = list(melee = 10, bullet = 0, laser = 0, energy = 0, bomb = 0, bio = 0, rad = 0)
+	resistance_flags = NONE
+	armor = list(melee = 10, bullet = 0, laser = 0, energy = 0, bomb = 0, bio = 0, rad = 0, fire = 75, acid = 50) //Weak melee protection, because you can wear it on your head
 	slot_flags = SLOT_HEAD
 	container_type = OPENCONTAINER
 

@@ -14,8 +14,9 @@
 	icon_state = "door_open"
 	opacity = 0
 	density = FALSE
-	burn_state = FIRE_PROOF
 	max_integrity = 300
+	obj_integrity = 300
+	resistance_flags = NONE
 	heat_proof = TRUE
 	glass = TRUE
 	explosion_block = 1
@@ -24,7 +25,7 @@
 	closingLayer = CLOSED_FIREDOOR_LAYER
 	auto_close_time = 50
 	assemblytype = /obj/structure/firelock_frame
-	armor = list("melee" = 30, "bullet" = 30, "laser" = 20, "energy" = 20, "bomb" = 10, "bio" = 100, "rad" = 100)
+	armor = list(melee = 30, bullet = 30, laser = 20, energy = 20, bomb = 10, bio = 100, rad = 100, fire = 50, acid = 70)
 	var/can_force = TRUE
 	var/force_open_time = 300
 	var/can_crush = TRUE
@@ -214,7 +215,7 @@
 		close()
 
 /obj/machinery/door/firedoor/deconstruct(disassembled = TRUE)
-	if(can_deconstruct)
+	if(!(flags & NODECONSTRUCT))
 		var/obj/structure/firelock_frame/F = new assemblytype(get_turf(src))
 		if(disassembled)
 			F.constructionStep = CONSTRUCTION_PANEL_OPEN

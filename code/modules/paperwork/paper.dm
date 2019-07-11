@@ -17,8 +17,10 @@
 	pressure_resistance = 0
 	slot_flags = SLOT_HEAD
 	body_parts_covered = HEAD
-	burn_state = FLAMMABLE
-	burntime = 5
+	resistance_flags = FLAMMABLE
+	obj_integrity = 50
+	max_integrity = 50
+	integrity_failure = 25	
 	attack_verb = list("bapped")
 
 	var/info		//What's actually written on the paper.
@@ -306,7 +308,7 @@
 /obj/item/paper/attackby(obj/item/P, mob/living/user, params)
 	..()
 
-	if(burn_state == ON_FIRE)
+	if(resistance_flags & ON_FIRE)
 		return
 
 	var/clown = 0
@@ -404,9 +406,9 @@
 
 	add_fingerprint(user)
 
-/obj/item/paper/fire_act(datum/gas_mixture/air, exposed_temperature, exposed_volume, global_overlay = TRUE)
+/obj/item/paper/fire_act(exposed_temperature,exposed_volume)
 	..()
-	if(burn_state >= FLAMMABLE) //Renders paper that has been lit on fire to be illegible.
+	if(resistance_flags & FLAMMABLE) //Renders paper that has been lit on fire to be illegible.
 		info = "<i>Heat-curled corners and sooty words offer little insight. Whatever was once written on this page has been rendered illegible through fire.</i>"
 
 /obj/item/paper/proc/stamp(var/obj/item/stamp/S)

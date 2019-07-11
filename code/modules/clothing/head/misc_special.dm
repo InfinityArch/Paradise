@@ -21,11 +21,9 @@
 	materials = list(MAT_METAL=1750, MAT_GLASS=400)
 	flash_protect = 2
 	tint = 2
-	armor = list(melee = 10, bullet = 0, laser = 0, energy = 0, bomb = 0, bio = 0, rad = 0)
+	armor = list(melee = 10, bullet = 0, laser = 0,energy = 0, bomb = 0, bio = 0, rad = 0, fire = 100, acid = 60)
 	flags_inv = (HIDEMASK|HIDEEARS|HIDEEYES|HIDEFACE)
 	actions_types = list(/datum/action/item_action/toggle)
-	burn_state = FIRE_PROOF
-
 	sprite_sheets = list(
 		"Vox" = 'icons/mob/species/vox/head.dmi',
 		"Unathi" = 'icons/mob/species/unathi/helmet.dmi',

@@ -20,9 +20,10 @@ var/bomb_set
 	var/lastentered
 	var/is_syndicate = 0
 	use_power = NO_POWER_USE
-	unacidable = 1
+	resistance_flags = ACID_PROOF
 	var/previous_level = ""
 	var/datum/wires/nuclearbomb/wires = null
+	resistance_flags = INDESTRUCTIBLE | LAVA_PROOF | FIRE_PROOF | UNACIDABLE | ACID_PROOF
 
 /obj/machinery/nuclearbomb/syndicate
 	is_syndicate = 1
@@ -328,9 +329,6 @@ var/bomb_set
 
 	SSnanoui.update_uis(src)
 
-/obj/machinery/nuclearbomb/ex_act(severity)
-	return
-
 /obj/machinery/nuclearbomb/blob_act()
 	if(timing == -1.0)
 		return
@@ -400,7 +398,9 @@ var/bomb_set
 	name = "nuclear authentication disk"
 	desc = "Better keep this safe."
 	icon_state = "nucleardisk"
-	armor = list(melee = 0, bullet = 0, laser = 0, energy = 0, bomb = 30, bio = 0, rad = 0)
+	obj_integrity = 250
+	max_integrity = 250
+	armor = list(melee = 0, bullet = 0, laser = 0, energy = 0, bomb = 30, bio = 0, rad = 0, fire = 90, acid = 70)
 
 /obj/item/disk/nuclear/unrestricted
 	desc = "Seems to have been stripped of its safeties, you better not lose it."

@@ -15,7 +15,8 @@
 	slot_flags = SLOT_BELT
 	attack_verb = null
 	var/lit = 0
-
+	resistance_flags = FIRE_PROOF
+	
 /obj/item/lighter/zippo
 	name = "zippo lighter"
 	desc = "The zippo."
@@ -166,7 +167,7 @@
 		location.hotspot_expose(700, 5)
 		return
 
-/obj/item/match/fire_act(datum/gas_mixture/air, exposed_temperature, exposed_volume, global_overlay = TRUE)
+/obj/item/match/fire_act(exposed_temperature,exposed_volume)
 	..()
 	matchignite()
 

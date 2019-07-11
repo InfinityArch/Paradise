@@ -1136,6 +1136,15 @@ so that different stomachs can handle things in different ways VB*/
 	for(var/obj/item/organ/O in internal_organs)
 		O.shock_organ(intensity)
 
+/mob/living/carbon/ExtinguishMob()
+	for(var/X in get_equipped_items())
+		var/obj/item/I = X
+		I.acid_level = 0 //washes off the acid on our clothes
+		I.cut_overlay(acid_overlay, TRUE)
+		I.extinguish() //extinguishes our clothes
+		I.cut_overlay(fire_overlay, TRUE)
+	..()
+
 /mob/living/carbon/update_sight()
 	if(!client)
 		return
@@ -1170,3 +1179,4 @@ so that different stomachs can handle things in different ways VB*/
 
 	SEND_SIGNAL(src, COMSIG_MOB_UPDATE_SIGHT)
 	sync_lighting_plane_alpha()
+

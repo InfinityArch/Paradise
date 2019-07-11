@@ -106,6 +106,7 @@ var/global/list/datum/stack_recipe/metal_recipes = list(
 	origin_tech = "materials=1"
 	merge_type = /obj/item/stack/sheet/metal
 	point_value = 2
+	resistance_flags = FIRE_PROOF
 
 /obj/item/stack/sheet/metal/cyborg
 	materials = list()
@@ -153,6 +154,8 @@ var/global/list/datum/stack_recipe/plasteel_recipes = list(
 	origin_tech = "materials=2"
 	merge_type = /obj/item/stack/sheet/plasteel
 	point_value = 23
+	armor = list(melee = 0, bullet = 0, laser = 0, energy = 0, bomb = 0, bio = 0, rad = 0, fire = 100, acid = 80)
+	resistance_flags = FIRE_PROOF
 
 /obj/item/stack/sheet/plasteel/New(var/loc, var/amount=null)
 	recipes = plasteel_recipes
@@ -188,7 +191,8 @@ var/global/list/datum/stack_recipe/wood_recipes = list(
 	singular_name = "wood plank"
 	icon_state = "sheet-wood"
 	origin_tech = "materials=1;biotech=1"
-	burn_state = FLAMMABLE
+	armor = list(melee = 0, bullet = 0, laser = 0, energy = 0, bomb = 0, bio = 0, rad = 0, fire = 50, acid = 0)
+	resistance_flags = FLAMMABLE
 	merge_type = /obj/item/stack/sheet/wood
 
 /obj/item/stack/sheet/wood/New(var/loc, var/amount=null)
@@ -224,7 +228,7 @@ var/global/list/datum/stack_recipe/cloth_recipes = list ( \
 	singular_name = "cloth roll"
 	icon_state = "sheet-cloth"
 	origin_tech = "materials=2"
-	burn_state = FLAMMABLE
+	resistance_flags = FLAMMABLE
 	force = 0
 	throwforce = 0
 	merge_type = /obj/item/stack/sheet/cloth
@@ -271,7 +275,7 @@ var/global/list/datum/stack_recipe/cardboard_recipes = list (
 	singular_name = "cardboard sheet"
 	icon_state = "sheet-card"
 	origin_tech = "materials=1"
-	burn_state = FLAMMABLE
+	resistance_flags = FLAMMABLE
 	merge_type = /obj/item/stack/sheet/cardboard
 
 /obj/item/stack/sheet/cardboard/New(var/loc, var/amt = null)
@@ -348,7 +352,7 @@ var/global/list/datum/stack_recipe/brass_recipes = list (\
 	singular_name = "brass sheet"
 	icon_state = "sheet-brass"
 	icon = 'icons/obj/items.dmi'
-	burn_state = FIRE_PROOF
+	
 	throwforce = 10
 	max_amount = 50
 	throw_speed = 1

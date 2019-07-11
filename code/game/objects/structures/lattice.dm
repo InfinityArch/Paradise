@@ -5,7 +5,9 @@
 	icon_state = "lattice"
 	density = FALSE
 	anchored = TRUE
-	armor = list(melee = 50, bullet = 0, laser = 0, energy = 0, bomb = 0, bio = 0, rad = 0)
+	armor = list(melee = 50, bullet = 0, laser = 0, energy = 0, bomb = 0, bio = 0, rad = 0, fire = 80, acid = 50)
+	obj_integrity = 50
+	max_integrity = 50
 	layer = LATTICE_LAYER //under pipes
 	plane = FLOOR_PLANE
 	var/number_of_rods = 1
@@ -39,24 +41,25 @@
 		return T.attackby(C, user) //hand this off to the turf instead (for building plating, catwalks, etc)
 
 /obj/structure/lattice/deconstruct(disassembled = TRUE)
-	new /obj/item/stack/rods(get_turf(src), number_of_rods)
+	if(!(resistance_flags & INDESTRUCTIBLE))
+		new /obj/item/stack/rods(get_turf(src), number_of_rods)
 	qdel(src)
 
-/obj/structure/lattice/blob_act()
+/obj/structure/lattice/attackby(obj/item/C as obj, mob/user as mob, params)
+	if(istype(C, /obj/item/stack/tile/plasteel) || istype(C, /obj/item/stack/rods))
+		var/turf/T = get_turf(src)
+		T.attackby(C, user) //BubbleWrap - hand this off to the underlying turf instead
+		return
+	if(istype(C, /obj/item/weldingtool))
+		var/obj/item/weldingtool/WT = C
+		if(WT.remove_fuel(0, user))
+			to_chat(user, "<span class='notice'>Slicing lattice joints...</span>")
+			deconstruct(TRUE)
+
+/obj/structure/lattice/deconstruct(disassembled = TRUE)
+	if(!(flags & NODECONSTRUCT))
+		new /obj/item/stack/rods(src.loc)
 	qdel(src)
-
-/obj/structure/lattice/ex_act(severity)
-	switch(severity)
-		if(1)
-			qdel(src)
-		if(2)
-			qdel(src)
-		if(3)
-			return
-
-/obj/structure/lattice/singularity_pull(S, current_size)
-	if(current_size >= STAGE_FOUR)
-		qdel(src)
 
 /obj/structure/lattice/catwalk
 	name = "catwalk"
@@ -76,6 +79,10 @@
 		C.deconstruct()
 	..()
 
+/obj/structure/lattice/singularity_pull(S, current_size)
+	if(current_size >= STAGE_FOUR)
+		deconstruct()
+		
 /obj/structure/lattice/catwalk/deconstruct()
 	var/turf/T = loc
 	for(var/obj/structure/cable/C in T)

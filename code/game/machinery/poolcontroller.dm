@@ -213,6 +213,20 @@
 
 	return 1
 
+/obj/machinery/poolcontroller/seacontroller
+	invisibility = 101
+	resistance_flags = ACID_PROOF
+	name = "Sea Controller"
+	desc = "A controller for the underwater portion of the sea. Players shouldn't see this."
+	deep_water = TRUE		//deep sea is deep water
+
+/obj/machinery/poolcontroller/seacontroller/Initialize()
+	linked_area = get_area(src)
+	for(var/turf/unsimulated/beach/water/W in linked_area)
+		linkedturfs += W //Add found pool turfs to the central list.
+		W.linkedcontroller = src // And add the linked controller to itself.
+	..()
+
 #undef FRIGID
 #undef COOL
 #undef NORMAL

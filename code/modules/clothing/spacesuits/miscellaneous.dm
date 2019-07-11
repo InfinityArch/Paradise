@@ -6,7 +6,7 @@
 	desc = "A special helmet designed for only the most fashionable of military figureheads."
 	flags_inv = HIDEFACE
 	permeability_coefficient = 0.01
-	armor = list(melee = 40, bullet = 50, laser = 50, energy = 25, bomb = 50, bio = 100, rad = 50)
+	armor = list(melee = 40, bullet = 50, laser = 50, energy = 25, bomb = 50, bio = 100, rad = 50, fire = 100, acid = 100)
 	species_restricted = list("exclude", "Diona", "Wryn")
 
 	sprite_sheets = list(
@@ -30,7 +30,7 @@
 	item_state = "capspacesuit"
 	w_class = WEIGHT_CLASS_BULKY
 	allowed = list(/obj/item/tank, /obj/item/flashlight,/obj/item/gun/energy, /obj/item/gun/projectile, /obj/item/ammo_box, /obj/item/ammo_casing, /obj/item/melee/baton,/obj/item/restraints/handcuffs)
-	armor = list(melee = 40, bullet = 50, laser = 50, energy = 25, bomb = 50, bio = 100, rad = 50)
+	armor = list(melee = 40, bullet = 50, laser = 50, energy = 25, bomb = 50, bio = 100, rad = 50, fire = 100, acid = 100)
 	species_restricted = list("exclude", "Diona", "Wryn")
 
 	sprite_sheets = list(
@@ -45,7 +45,7 @@
 	item_state = "deathsquad"
 	armor = list(melee = 80, bullet = 80, laser = 50, energy = 50, bomb = 100, bio = 100, rad = 100)
 	max_heat_protection_temperature = FIRE_IMMUNITY_MAX_TEMP_PROTECT
-	unacidable = 1
+	resistance_flags = ACID_PROOF
 	vision_flags = SEE_MOBS
 	lighting_alpha = LIGHTING_PLANE_ALPHA_MOSTLY_INVISIBLE //don't render darkness while wearing these
 	see_in_dark = 8
@@ -58,9 +58,9 @@
 	icon_state = "deathsquad"
 	item_state = "swat_suit"
 	allowed = list(/obj/item/gun,/obj/item/ammo_box,/obj/item/ammo_casing,/obj/item/melee/baton,/obj/item/restraints/handcuffs,/obj/item/tank,/obj/item/kitchen/knife/combat)
-	armor = list(melee = 80, bullet = 80, laser = 50, energy = 50, bomb = 100, bio = 100, rad = 100)
+	armor = list(melee = 80, bullet = 80, laser = 50, energy = 50, bomb = 100, bio = 100, rad = 100, fire = 100, acid = 100)
 	max_heat_protection_temperature = FIRE_IMMUNITY_MAX_TEMP_PROTECT
-	unacidable = 1
+	resistance_flags = ACID_PROOF
 	strip_delay = 130
 
 	//NEW SWAT suit
@@ -82,7 +82,7 @@
 	name = "officer's beret"
 	desc = "An armored beret commonly used by special operations officers."
 	icon_state = "beret_officer"
-	armor = list(melee = 65, bullet = 55, laser = 35, energy = 20, bomb = 30, bio = 30, rad = 30)
+	armor = list(melee = 65, bullet = 55, laser = 35, energy = 20, bomb = 30, bio = 30, rad = 30, fire = 100, acid = 100)
 	flags =  STOPSPRESSUREDMAGE | THICKMATERIAL
 
 /obj/item/clothing/suit/space/deathsquad/officer

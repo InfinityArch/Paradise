@@ -25,10 +25,38 @@
 	M.water_act(volume, water_temperature, src, method)
 
 /datum/reagent/water/reaction_turf(turf/simulated/T, volume)
-	T.water_act(volume, water_temperature, src) 
+	if(!istype(T))
+		return
+	if(volume >= 3)
+		T.MakeSlippery()
+
+	for(var/mob/living/carbon/slime/M in T)
+		M.apply_water()
+
+	var/hotspot = (locate(/obj/effect/hotspot) in T)
+	if(hotspot)
+		var/datum/gas_mixture/lowertemp = T.remove_air( T.air.total_moles())
+		lowertemp.temperature = max(min(lowertemp.temperature-2000,lowertemp.temperature / 2), 0)
+		lowertemp.react()
+		T.assume_air(lowertemp)
+		qdel(hotspot)
+	var/obj/effect/acid/A = (locate(/obj/effect/acid) in T)
+	if(A)
+		A.acid_level = max(A.acid_level - volume*50, 0)
 
 /datum/reagent/water/reaction_obj(obj/O, volume)
-	O.water_act(volume, water_temperature, src) 
+	O.extinguish()
+	O.acid_level = 0
+	O.cut_overlay(acid_overlay, TRUE)
+
+	if(istype(O, /obj/item/reagent_containers/food/snacks/monkeycube))
+		var/obj/item/reagent_containers/food/snacks/monkeycube/cube = O
+		cube.Expand()
+	// Dehydrated carp
+	if(istype(O, /obj/item/toy/carpplushie/dehy_carp))
+		var/obj/item/toy/carpplushie/dehy_carp/dehy = O
+		dehy.Swell() // Makes a carp
+
 
 /datum/reagent/lube
 	name = "Space Lube"

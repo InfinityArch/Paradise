@@ -7,10 +7,17 @@
 	anchored = 0
 	pressure_resistance = 2*ONE_ATMOSPHERE
 	container_type = DRAINABLE | AMOUNT_VISIBLE
-
+	obj_integrity = 300
+	max_integrity = 300
 	var/tank_volume = 1000 //In units, how much the dispenser can hold
 	var/reagent_id = "water" //The ID of the reagent that the dispenser uses
 	var/lastrigger = "" // The last person to rig this fuel tank - Stored with the object. Only the last person matter for investigation
+
+/obj/structure/reagent_dispensers/take_damage(damage_amount, damage_type = BRUTE, damage_flag = 0, sound_effect = 1, attack_dir)
+	. = ..()
+	if(. && obj_integrity > 0)
+		if(tank_volume && (damage_flag == "bullet" || damage_flag == "laser"))
+			boom()
 
 /obj/structure/reagent_dispensers/attackby(obj/item/I, mob/user, params)
 	if(I.is_refillable())
@@ -30,25 +37,16 @@
 				reagents.temperature_reagents(exposed_temperature)
 
 /obj/structure/reagent_dispensers/proc/boom()
-	visible_message("<span class='danger'>[src] ruptures!</span>")
+	visible_message("<span class='danger'>\The [src] ruptures!</span>")
 	chem_splash(loc, 5, list(reagents))
 	qdel(src)
 
-/obj/structure/reagent_dispensers/ex_act(severity)
-	switch(severity)
-		if(1)
+/obj/structure/reagent_dispensers/deconstruct(disassembled = TRUE)
+	if(!(flags & NODECONSTRUCT))
+		if(!disassembled)
 			boom()
-		if(2)
-			if(prob(50))
-				boom()
-		if(3)
-			if(prob(5))
-				boom()
-
-/obj/structure/reagent_dispensers/blob_act()
-	if(prob(50))
-		boom()
-
+	else
+		qdel(src)
 
 //Dispensers
 /obj/structure/reagent_dispensers/watertank
@@ -107,7 +105,7 @@
 /obj/structure/reagent_dispensers/fueltank/ex_act()
 	boom()
 
-/obj/structure/reagent_dispensers/fueltank/fire_act(datum/gas_mixture/air, exposed_temperature, exposed_volume, global_overlay = TRUE)
+/obj/structure/reagent_dispensers/fueltank/fire_act(exposed_temperature,exposed_volume)
 	..()
 	boom()
 
@@ -272,7 +270,8 @@
 
 /obj/structure/reagent_dispensers/beerkeg/blob_act()
 	explosion(loc, 0, 3, 5, 7, 10)
-	qdel(src)
+	if(!QDELETED(src))
+		qdel(src)
 
 /obj/structure/reagent_dispensers/beerkeg/nuke
 	name = "Nanotrasen-brand nuclear fission explosive"

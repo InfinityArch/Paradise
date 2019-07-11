@@ -164,12 +164,11 @@
 	SEND_SIGNAL(src, COMSIG_ATOM_DIR_CHANGE, dir, newdir)
 	dir = newdir
 
-/atom/proc/attack_hulk(mob/living/carbon/human/user, does_attack_animation = FALSE)
+/atom/proc/attack_hulk(mob/living/carbon/human/user)
 	SEND_SIGNAL(src, COMSIG_ATOM_HULK_ATTACK, user)
-	if(does_attack_animation)
-		user.changeNext_move(CLICK_CD_MELEE)
-		add_attack_logs(user, src, "Punched with hulk powers")
-		user.do_attack_animation(src, ATTACK_EFFECT_SMASH)
+	user.changeNext_move(CLICK_CD_MELEE)
+	add_attack_logs(user, src, "punched", "hulk powers")
+	user.do_attack_animation(src)
 
 /atom/proc/CheckParts(list/parts_list)
 	for(var/A in parts_list)
@@ -236,6 +235,7 @@
 
 /atom/proc/bullet_act(obj/item/projectile/P, def_zone)
 	. = P.on_hit(src, 0, def_zone)
+	return
 
 /atom/proc/in_contents_of(container)//can take class or object instance as argument
 	if(ispath(container))
@@ -320,10 +320,15 @@
 
 /atom/proc/blob_act(obj/structure/blob/B)
 	SEND_SIGNAL(src, COMSIG_ATOM_BLOB_ACT, B)
+	return
 
-/atom/proc/fire_act(datum/gas_mixture/air, exposed_temperature, exposed_volume, global_overlay = TRUE)
+/atom/proc/fire_act(exposed_temperature, exposed_volume)
 	if(reagents)
 		reagents.temperature_reagents(exposed_temperature)
+	return
+
+/atom/proc/acid_act(acidpwr, acid_volume)
+	return
 
 /atom/proc/emag_act()
 	return
@@ -776,6 +781,8 @@ var/list/blood_splatter_icons = list()
 /atom/Exited(atom/movable/AM, atom/newLoc)
 	SEND_SIGNAL(src, COMSIG_ATOM_EXITED, AM, newLoc)
 
+/atom/proc/mech_melee_attack(obj/mecha/M)
+	return
 /*
 	Adds an instance of colour_type to the atom's atom_colours list
 */

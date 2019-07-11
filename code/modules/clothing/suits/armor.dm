@@ -7,8 +7,10 @@
 	max_heat_protection_temperature = ARMOR_MAX_TEMP_PROTECT
 	strip_delay = 60
 	put_on_delay = 40
-	burn_state = FIRE_PROOF
-
+	obj_integrity = 200
+	max_integrity = 200
+	resistance_flags = NONE
+	armor = list(melee = 30, bullet = 30, laser = 30, energy = 10, bomb = 25, bio = 0, rad = 0, fire = 50, acid = 50)	
 	sprite_sheets = list(
 		"Vox" = 'icons/mob/species/vox/suit.dmi'
 		)
@@ -20,7 +22,7 @@
 	item_state = "armor"
 	blood_overlay_type = "armor"
 	flags_size = ONESIZEFITSALL
-	armor = list(melee = 25, bullet = 15, laser = 25, energy = 10, bomb = 25, bio = 0, rad = 0)
+	armor = list(melee = 25, bullet = 15, laser = 25, energy = 10, bomb = 25, bio = 0, rad = 0, fire = 50, acid = 75)
 
 /obj/item/clothing/suit/armor/vest/jacket
 	name = "military jacket"
@@ -113,7 +115,7 @@
 	icon_state = "hos"
 	item_state = "hos"
 	body_parts_covered = UPPER_TORSO|LOWER_TORSO|ARMS|LEGS
-	armor = list(melee = 30, bullet = 30, laser = 30, energy = 10, bomb = 25, bio = 0, rad = 0)
+	armor = list(melee = 30, bullet = 30, laser = 30, energy = 10, bomb = 25, bio = 0, rad = 0, fire = 70, acid = 90)
 	flags_inv = HIDEJUMPSUIT
 	cold_protection = UPPER_TORSO|LOWER_TORSO|LEGS|ARMS
 	heat_protection = UPPER_TORSO|LOWER_TORSO|LEGS|ARMS
@@ -147,7 +149,7 @@
 	cold_protection = UPPER_TORSO|LOWER_TORSO|HANDS
 	heat_protection = UPPER_TORSO|LOWER_TORSO|HANDS
 	strip_delay = 70
-	burn_state = FLAMMABLE
+	resistance_flags = FLAMMABLE
 
 /obj/item/clothing/suit/armor/vest/warden/alt
 	name = "warden's jacket"
@@ -160,7 +162,8 @@
 	icon_state = "capcarapace"
 	item_state = "armor"
 	body_parts_covered = UPPER_TORSO|LOWER_TORSO
-	armor = list(melee = 50, bullet = 40, laser = 50, energy = 10, bomb = 25, bio = 0, rad = 0)
+	resistance_flags = FIRE_PROOF
+	armor = list(melee = 50, bullet = 40, laser = 50, energy = 10, bomb = 25, bio = 0, rad = 0, fire = 100, acid = 90)
 
 /obj/item/clothing/suit/armor/vest/capcarapace/alt
 	name = "captain's parade jacket"
@@ -207,7 +210,7 @@
 	icon_state = "knight_templar"
 	item_state = "knight_templar"
 	allowed = list(/obj/item/nullrod/claymore)
-	armor = list(melee = 25, bullet = 5, laser = 5, energy = 5, bomb = 0, bio = 0, rad = 0)
+	armor = list(melee = 50, bullet = 50, laser = 50, energy = 40, bomb = 60, bio = 0, rad = 0, fire = 60, acid = 60)
 
 /obj/item/clothing/suit/armor/bulletproof
 	name = "Bulletproof Vest"
@@ -225,7 +228,8 @@
 	icon_state = "armor_reflec"
 	item_state = "armor_reflec"
 	blood_overlay_type = "armor"
-	armor = list(melee = 10, bullet = 10, laser = 60, energy = 50, bomb = 0, bio = 0, rad = 0)
+	armor = list(melee = 10, bullet = 10, laser = 60, energy = 50, bomb = 0, bio = 0, rad = 0, fire = 100, acid = 50)
+	resistance_flags = FIRE_PROOF
 	var/hit_reflect_chance = 40
 
 /obj/item/clothing/suit/armor/laserproof/IsReflect(var/def_zone)
@@ -242,7 +246,7 @@
 	blood_overlay_type = "armor"
 	flags_size = ONESIZEFITSALL
 	allowed = list(/obj/item/tank/emergency_oxygen,/obj/item/reagent_containers/spray/pepper,/obj/item/flashlight,/obj/item/gun,/obj/item/ammo_box,/obj/item/ammo_casing,/obj/item/melee/baton,/obj/item/restraints/handcuffs,/obj/item/storage/fancy/cigarettes,/obj/item/lighter,/obj/item/detective_scanner,/obj/item/taperecorder)
-	burn_state = FLAMMABLE
+	resistance_flags = FLAMMABLE
 
 //Reactive armor
 /obj/item/clothing/suit/armor/reactive
@@ -252,9 +256,9 @@
 	icon_state = "reactiveoff"
 	item_state = "reactiveoff"
 	blood_overlay_type = "armor"
-	armor = list(melee = 0, bullet = 0, laser = 0, energy = 0, bomb = 0, bio = 0, rad = 0)
+	armor = list(melee = 0, bullet = 0, laser = 0, energy = 0, bomb = 0, bio = 0, rad = 0, fire = 100, acid = 100)
 	actions_types = list(/datum/action/item_action/toggle)
-	unacidable = 1
+	resistance_flags = ACID_PROOF
 	hit_reaction_chance = 50
 
 /obj/item/clothing/suit/armor/reactive/attack_self(mob/user)
@@ -382,7 +386,7 @@
 	cold_protection = UPPER_TORSO | LOWER_TORSO | LEGS | FEET | ARMS | HANDS
 	min_cold_protection_temperature = SPACE_SUIT_MIN_TEMP_PROTECT
 	sprite_sheets = null
-	armor = list(melee = 80, bullet = 80, laser = 50, energy = 50, bomb = 100, bio = 100, rad = 100)
+	armor = list(melee = 80, bullet = 80, laser = 50, energy = 50, bomb = 100, bio = 100, rad = 100, fire = 100, acid = 100)
 
 /obj/item/clothing/suit/armor/heavy
 	name = "heavy armor"
@@ -472,7 +476,7 @@
 	min_cold_protection_temperature = ARMOR_MIN_TEMP_PROTECT
 	heat_protection = UPPER_TORSO|LOWER_TORSO
 	max_heat_protection_temperature = ARMOR_MAX_TEMP_PROTECT
-	burn_state = FIRE_PROOF
+	resistance_flags = NONE
 	armor = list(melee = 25, bullet = 15, laser = 25, energy = 10, bomb = 25, bio = 0, rad = 0)
 
 //LAVALAND!
