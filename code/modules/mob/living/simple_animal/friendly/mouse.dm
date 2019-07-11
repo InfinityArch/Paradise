@@ -34,6 +34,7 @@
 	holder_type = /obj/item/holder/mouse
 	can_collar = 1
 	gold_core_spawnable = CHEM_MOB_SPAWN_FRIENDLY
+	var/chew_probability = 1
 
 /mob/living/simple_animal/mouse/Initialize(mapload)
 	. = ..()
@@ -41,6 +42,20 @@
 
 /mob/living/simple_animal/mouse/handle_automated_speech()
 	..()
+	if(prob(chew_probability))
+		var/turf/simulated/floor/F = get_turf(src)
+		if(istype(F) && !F.intact)
+			var/obj/structure/cable/C = locate() in F
+			if(C && prob(15))
+				if(C.avail())
+					visible_message("<span class='warning'>[src] chews through [C]. It's toast!</span>")
+					playsound(src, 'sound/effects/sparks2.ogg', 100, 1)
+					C.deconstruct()
+					death(0, 1)
+				else
+					C.deconstruct()
+					visible_message("<span class='warning'>[src] chews through [C].</span>")
+			
 	if(prob(speak_chance))
 		for(var/mob/M in view())
 			M << squeak_sound
@@ -98,10 +113,14 @@
 			to_chat(M, "<span class='notice'>[bicon(src)] Squeek!</span>")
 	..()
 
-/mob/living/simple_animal/mouse/death(gibbed)
+/mob/living/simple_animal/mouse/death(gibbed, toast)	
 	// Only execute the below if we successfully died
 	playsound(src, squeak_sound, 40, 1)
 	. = ..(gibbed)
+	if(!gibbed)
+		if(toast)
+			add_atom_colour("#3A3A3A", FIXED_COLOUR_PRIORITY)
+			desc = "It's toast."
 	if(!.)
 		return FALSE
 	layer = MOB_LAYER
