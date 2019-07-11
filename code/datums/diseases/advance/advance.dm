@@ -34,7 +34,7 @@ var/list/advance_cures = 	list(
 	viable_mobtypes = list(/mob/living/carbon/human)
 
 	// NEW VARS
-
+	var/list/properties = list()
 	var/list/symptoms = list() // The symptoms of the disease.
 	var/id = ""
 	var/processing = 0
@@ -56,11 +56,28 @@ var/list/advance_cures = 	list(
 			symptoms = GenerateSymptoms(0, 2)
 		else
 			for(var/datum/symptom/S in D.symptoms)
-				symptoms += new S.type
+				symptoms += S.Copy()
 
 	Refresh()
 	..(process, D)
 	return
+
+/datum/disease/advance/try_infect(var/mob/living/infectee, make_copy = TRUE)
+	if (!infectee.viruses.len)
+		infectee.ForceContractDisease(src)
+		return TRUE
+	//see if we are more transmittable than enough diseases to replace them
+	//diseases replaced in this way do not confer immunity
+	var/list/advance_diseases = list()
+	for(var/datum/disease/advance/P in infectee.viruses)
+		advance_diseases += P
+	var/datum/disease/advance/competition = advance_diseases[1]
+	if(totalTransmittable() > competition.totalResistance())
+		competition.cure(FALSE)
+	else
+		return FALSE //we are not strong enough to bully our way in
+	infectee.ForceContractDisease(src)
+	return TRUE
 
 /datum/disease/advance/Destroy()
 	if(processing)
@@ -117,7 +134,7 @@ var/list/advance_cures = 	list(
 	if(!(IsSame(D)))
 		var/list/possible_symptoms = shuffle(D.symptoms)
 		for(var/datum/symptom/S in possible_symptoms)
-			AddSymptom(new S.type)
+			AddSymptom(S.Copy())
 
 /datum/disease/advance/proc/HasSymptom(datum/symptom/S)
 	for(var/datum/symptom/symp in symptoms)
@@ -153,9 +170,9 @@ var/list/advance_cures = 	list(
 
 	return generated
 
-/datum/disease/advance/proc/Refresh(new_name = 0)
-	var/list/properties = GenerateProperties()
-	AssignProperties(properties)
+/datum/disease/advance/proc/Refresh(new_name = FALSE)
+	GenerateProperties()
+	AssignProperties()
 	id = null
 
 	if(!archive_diseases[GetDiseaseID()])
@@ -167,38 +184,30 @@ var/list/advance_cures = 	list(
 	var/datum/disease/advance/A = archive_diseases[GetDiseaseID()]
 	AssignName(A.name)
 
-//Generate disease properties based on the effects. Returns an associated list.
 /datum/disease/advance/proc/GenerateProperties()
-
-	if(!symptoms || !symptoms.len)
-		CRASH("We did not have any symptoms before generating properties.")
-		return
-
-	var/list/properties = list("resistance" = 1, "stealth" = 0, "stage_rate" = 1, "transmittable" = 1, "severity" = 0)
+	properties = list("resistance" = 0, "stealth" = 0, "stage_rate" = 0, "transmittable" = 0, "severity" = 0)
 
 	for(var/datum/symptom/S in symptoms)
-
 		properties["resistance"] += S.resistance
 		properties["stealth"] += S.stealth
 		properties["stage_rate"] += S.stage_speed
 		properties["transmittable"] += S.transmittable
-		properties["severity"] = max(properties["severity"], S.severity) // severity is based on the highest severity symptom
+		if(!S.neutered)
+			properties["severity"] = max(properties["severity"], S.severity) // severity is based on the highest severity non-neutered symptom
 
-	return properties
 
 // Assign the properties that are in the list.
-/datum/disease/advance/proc/AssignProperties(list/properties = list())
+/datum/disease/advance/proc/AssignProperties()
 
 	if(properties && properties.len)
-		switch(properties["stealth"])
-			if(2)
-				visibility_flags = HIDDEN_SCANNER
-			if(3 to INFINITY)
-				visibility_flags = HIDDEN_SCANNER|HIDDEN_PANDEMIC
+		if(properties["stealth"] >= 2)
+			visibility_flags |= HIDDEN_SCANNER
+		else
+			visibility_flags &= ~HIDDEN_SCANNER
 
-		// The more symptoms we have, the less transmittable it is but some symptoms can make up for it.
 		SetSpread(Clamp(2 ** (properties["transmittable"] - symptoms.len), BLOOD, AIRBORNE))
-		permeability_mod = max(Ceiling(0.4 * properties["transmittable"]), 1)
+
+		permeability_mod = max(CEILING(0.4 * properties["transmittable"], 1), 1)
 		cure_chance = 15 - Clamp(properties["resistance"], -5, 5) // can be between 10 and 20
 		stage_prob = max(properties["stage_rate"], 2)
 		SetSeverity(properties["severity"])
@@ -262,7 +271,16 @@ var/list/advance_cures = 	list(
 	var/s = safepick(GenerateSymptoms(min_level, max_level, 1))
 	if(s)
 		AddSymptom(s)
-		Refresh(1)
+		Refresh(TRUE)
+	return
+
+// Randomly neuter a symptom.
+/datum/disease/advance/proc/Neuter()
+	if(symptoms.len)
+		var/s = safepick(symptoms)
+		if(s)
+			NeuterSymptom(s)
+			Refresh(TRUE)
 	return
 
 // Randomly remove a symptom.
@@ -310,6 +328,12 @@ var/list/advance_cures = 	list(
 	symptoms -= S
 	return
 
+// Neuter a symptom, so it will only affect stats
+/datum/disease/advance/proc/NeuterSymptom(datum/symptom/S)
+	if(!S.neutered)
+		S.neutered = TRUE
+		S.name += " (neutered)"
+		S.id += "N" //new disease is unique
 /*
 
 	Static Procs

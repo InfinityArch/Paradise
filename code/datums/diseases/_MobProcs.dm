@@ -18,6 +18,8 @@
 		return FALSE
 
 	if(istype(D, /datum/disease/advance) && count_by_type(viruses, /datum/disease/advance) > 0)
+		var/datum/disease/advance/F = D
+		F.try_infect(src)
 		return FALSE
 
 	if(!(type in D.viable_mobtypes))
@@ -146,3 +148,10 @@
 	if(. == -1)
 		if(D.viable_mobtypes.Find(/mob/living/carbon/human))
 			return 1 //this is stupid as fuck but because monkeys are only half the time actually subtypes of humans they need this
+
+/mob/living/proc/CanSpreadAirborneDisease()
+	return !is_mouth_covered()
+
+/mob/living/carbon/CanSpreadAirborneDisease()
+	return !((head && (head.flags_cover & HEADCOVERSMOUTH))) || (wear_mask && (wear_mask.flags_cover & MASKCOVERSMOUTH))
+	

@@ -13,6 +13,8 @@
 	var/printing = null
 	var/wait = null
 	var/obj/item/reagent_containers/beaker = null
+	var/datum/symptom/stored = null
+	var/list/L
 
 /obj/machinery/computer/pandemic/New()
 	..()
@@ -103,6 +105,30 @@
 			temp_html = "The replicator is not ready yet."
 		updateUsrDialog()
 		return
+
+	else if(href_list["select_disease"])
+		for (var/datum/symptom/S in L)
+			if(S.name == href_list["select_disease"])
+				stored = S
+		if(stored)
+			temp_html += "<h3>Threshold Effects:</h3>"
+			temp_html += "[stored.threshold_desc]<hr>"
+			temp_html += "<h3>Symptom Statistics:</h3>"
+			temp_html += "<b>Name: </b>[stored.name]<BR>"
+			temp_html += "<b>Description: </b>[stored.desc]<BR>"
+			temp_html += "<b>Resistance:</b> [stored.resistance]<BR>"
+			temp_html += "<b>Stealth:</b> [stored.stealth]<BR>"
+			temp_html += "<b>Transmittability:</b> [stored.transmittable]<BR>"
+			temp_html += "<b>Stage Speed:</b> [stored.stage_speed]<BR>"
+			temp_html += "<b>Severity:</b> [stored.severity]<BR>"
+			if (stored.neutered)
+				temp_html += "<b>This symptom has been neutered, and has no effect. It will still affect the virus' statistics.</b>"
+			updateUsrDialog()
+			return
+		else
+			return
+
+
 	else if(href_list["create_virus_culture"])
 		if(!wait)
 			var/type = GetVirusTypeByIndex(text2num(href_list["create_virus_culture"]))//the path is received as string - converting
@@ -145,6 +171,7 @@
 		updateUsrDialog()
 		return
 	else if(href_list["clear"])
+		stored = null
 		temp_html = ""
 		updateUsrDialog()
 		return
@@ -271,14 +298,26 @@
 							dat += "<b>Description: </b> [(D.desc||"none")]<BR>"
 							dat += "<b>Spread:</b> [(D.spread_text||"none")]<BR>"
 							dat += "<b>Possible cure:</b> [(D.cure_text||"none")]<BR><BR>"
+							
 
 							if(istype(D, /datum/disease/advance))
 								var/datum/disease/advance/A = D
+								var/resistance = num2text(A.properties["resistance"])
+								var/stealth = num2text(A.properties["stealth"])
+								var/transmittable = num2text(A.properties["transmittable"])
+								var/stage_speed = num2text(A.properties["stage_rate"])
+								var/severity = num2text(A.properties["severity"])
+								dat += "<h3>Disease statistics:</h3><BR>"
+								dat += "<b>Resistance:</b> [resistance]<BR>"
+								dat += "<b>Stealth:</b> [stealth]<BR>"
+								dat += "<b>Transmittability:</b> [transmittable]<BR>"
+								dat += "<b>Stage Speed:</b> [stage_speed]<BR>"
+								dat += "<b>Severity:</b> [severity]<BR>"
 								dat += "<b>Symptoms:</b> "
-								var/english_symptoms = list()
+								L = A.symptoms
 								for(var/datum/symptom/S in A.symptoms)
-									english_symptoms += S.name
-								dat += english_list(english_symptoms)
+									dat += "<a href='?src=[UID()];select_disease=[S.name]'>[S.name]</a> "
+
 
 						else
 							dat += "No detectable virus in the sample."
