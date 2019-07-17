@@ -1,8 +1,16 @@
+/mob/living/carbon/human/get_movespeed_modifiers()
+	var/list/considering = ..()
+	. = considering
+	if(src.status_flags & IGNORESLOWDOWN)
+		for(var/id in .)
+			var/list/data = .[id]
+			if(data[MOVESPEED_DATA_INDEX_FLAGS] & IGNORE_NOSLOW)
+				.[id] = data
+
 /mob/living/carbon/human/movement_delay()
-	. = 0
-	. += ..()
-	. += config.human_delay
-	. += dna.species.movement_delay(src)
+	. = ..()
+	if(dna && dna.species)
+		. += dna.species.movement_delay(src)
 
 /mob/living/carbon/human/Process_Spacemove(movement_dir = 0)
 

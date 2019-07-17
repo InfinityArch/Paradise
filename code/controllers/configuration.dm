@@ -122,12 +122,11 @@
 	var/walk_speed = 0
 
 	//Mob specific modifiers. NOTE: These will affect different mob types in different ways
-	var/human_delay = 0
-	var/robot_delay = 0
-	var/monkey_delay = 0
-	var/alien_delay = 0
-	var/slime_delay = 0
-	var/animal_delay = 0
+	var/list/multiplicative_movespeeds = list(	/mob/living/simple_animal = 2.5,
+	/mob/living/carbon/human = 1.5,
+	/mob/living/carbon/alien/humanoid = 1.5,
+	/mob/living/carbon/alien/humanoid/hunter = -1,
+	/mob/living/carbon/alien/humanoid/queen = 3)
 
 	//IP Intel vars
 	var/ipintel_email
@@ -496,6 +495,22 @@
 				if("protect_roles_from_antagonist")
 					config.protect_roles_from_antagonist = 1
 
+				if("multiplicative_movespeed")
+					var/mob_pos = findtext(value, " ")
+					var/mob_name = null
+					var/mob_value = null
+
+					if(mob_pos)
+						mob_name = lowertext(copytext(value, 1, mob_pos))
+						mob_value = copytext(value, mob_pos + 1)
+						if(!ispath(mob_name))
+							mob_name = text2path(mob_name)
+						if(!isnum(mob_value))
+							mob_value = text2num(mob_value)
+						config.multiplicative_movespeeds[mob_name] = mob_value
+						update_config_movespeed_type_lookup(TRUE)
+					else
+						log_config("Incorrect movespeed configuration definition: [mob_name][mob_value].")
 				if("probability")
 					var/prob_pos = findtext(value, " ")
 					var/prob_name = null
@@ -732,18 +747,6 @@
 					config.run_speed = value
 				if("walk_speed")
 					config.walk_speed = value
-				if("human_delay")
-					config.human_delay = value
-				if("robot_delay")
-					config.robot_delay = value
-				if("monkey_delay")
-					config.monkey_delay = value
-				if("alien_delay")
-					config.alien_delay = value
-				if("slime_delay")
-					config.slime_delay = value
-				if("animal_delay")
-					config.animal_delay = value
 				if("bones_can_break")
 					config.bones_can_break = value
 				if("shuttle_refuel_delay")

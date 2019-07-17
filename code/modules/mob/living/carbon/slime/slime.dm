@@ -79,31 +79,38 @@
 		overlays += image('icons/mob/slimes.dmi', icon_state = "aslime-[mood]")
 	..()
 
-/mob/living/carbon/slime/movement_delay()
-	if(bodytemperature >= 330.23) // 135 F
-		return -1	// slimes become supercharged at high temperatures
-
+/mob/living/carbon/slime/on_reagent_change()
 	. = ..()
+	remove_movespeed_modifier(MOVESPEED_ID_SLIME_REAGENTMOD, TRUE)
+	var/amount = 0
+	if(reagents.has_reagent("methamphetamine")) // morphine slows slimes down
+		amount = 2
+	if(reagents.has_reagent("frostoil")) // Frostoil also makes them move VEEERRYYYYY slow
+		amount = 5
+	if(amount)
+		add_movespeed_modifier(MOVESPEED_ID_SLIME_REAGENTMOD, TRUE, 100, override = TRUE, multiplicative_slowdown = amount)
 
+/mob/living/simple_animal/slime/updatehealth()
+	. = ..()
+	remove_movespeed_modifier(MOVESPEED_ID_SLIME_HEALTHMOD, FALSE)
 	var/health_deficiency = (100 - health)
+	var/mod = 0
 	if(health_deficiency >= 45)
-		. += (health_deficiency / 25)
+		mod += (health_deficiency / 25)
+	if(health <= 0)
+		mod += 2
+	add_movespeed_modifier(MOVESPEED_ID_SLIME_HEALTHMOD, TRUE, 100, multiplicative_slowdown = mod)
 
-	if(bodytemperature < 183.222)
-		. += (283.222 - bodytemperature) / 10 * 1.75
-
-	if(reagents)
-		if(reagents.has_reagent("methamphetamine")) // Meth slows slimes down
-			. *= 2
-
-		if(reagents.has_reagent("frostoil")) // Frostoil also makes them move VEEERRYYYYY slow
-			. *= 5
-
-	if(health <= 0) // if damaged, the slime moves twice as slow
-		. *= 2
-
-	. += config.slime_delay
-
+/mob/living/simple_animal/slime/adjust_bodytemperature()
+	. = ..()
+	var/mod = 0
+	if(bodytemperature >= 330.23) // 135 F or 57.08 C
+		mod = -1	// slimes become supercharged at high temperatures
+	else if(bodytemperature < 183.222)
+		mod = (283.222 - bodytemperature) / 10 * 1.75
+	if(mod)
+		add_movespeed_modifier(MOVESPEED_ID_SLIME_TEMPMOD, TRUE, 100, override = TRUE, multiplicative_slowdown = mod)
+		
 /mob/living/carbon/slime/ObjBump(obj/O)
 	if(!client && powerlevel > 0)
 		var/chance = 10

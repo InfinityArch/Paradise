@@ -94,6 +94,7 @@
 		if(!istype(collar))
 			collar = new(src)
 		regenerate_icons()
+	update_simplemob_varspeed()
 
 /mob/living/simple_animal/Destroy()
 	if(collar)
@@ -113,6 +114,10 @@
 		SSidlenpcpool.idle_mobs_by_zlevel[T.z] -= src
 
 	return ..()
+
+/mob/living/simple_animal/proc/set_varspeed(var_value)
+	speed = var_value
+	update_simplemob_varspeed()
 
 /mob/living/simple_animal/Login()
 	if(src && src.client)
@@ -303,13 +308,11 @@
 	else
 		..()
 
-/mob/living/simple_animal/movement_delay()
-	. = ..()
-
-	. = speed
-
-	. += config.animal_delay
-
+/mob/living/simple_animal/proc/update_simplemob_varspeed()
+	if(speed == 0)
+		remove_movespeed_modifier(MOVESPEED_ID_SIMPLEMOB_VARSPEED, TRUE)
+	add_movespeed_modifier(MOVESPEED_ID_SIMPLEMOB_VARSPEED, TRUE, 100, multiplicative_slowdown = speed, override = TRUE)
+	
 /mob/living/simple_animal/Stat()
 	..()
 

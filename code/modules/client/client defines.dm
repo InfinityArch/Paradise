@@ -18,7 +18,8 @@
 		/////////
 	var/datum/preferences/prefs = null
 	var/skip_antag = FALSE //TRUE when a player declines to be included for the selection process of game mode antagonists.
-	var/move_delay		= 1
+	var/last_turn = 0
+	var/move_delay = 0
 	var/moving			= null
 	var/adminobs		= null
 	var/area			= null

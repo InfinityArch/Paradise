@@ -56,6 +56,12 @@
 
 #define MOVEMENT_DELAY_BUFFER 0.75
 #define MOVEMENT_DELAY_BUFFER_DELTA 1.25
+
+//DO NOT USE THIS UNLESS YOU ABSOLUTELY HAVE TO. THIS IS BEING PHASED OUT FOR THE MOVESPEED MODIFICATION SYSTEM.
+//See mob_movespeed.dm
+/mob/proc/movement_delay()	//update /living/movement_delay() if you change this
+	return cached_multiplicative_slowdown
+
 /client/Move(n, direct)
 	if(world.time < move_delay)
 		return
@@ -494,10 +500,10 @@
 		mob.toggle_move_intent(usr)
 
 /mob/proc/toggle_move_intent(mob/user)
-	if(m_intent == MOVE_INTENT_RUN)
+	if(hud_used && hud_used.static_inventory)
+		for(var/obj/screen/mov_intent/selector in hud_used.static_inventory)
+			selector.Click(src)
+	else if(m_intent == MOVE_INTENT_RUN)
 		m_intent = MOVE_INTENT_WALK
 	else
 		m_intent = MOVE_INTENT_RUN
-	if(hud_used && hud_used.static_inventory)
-		for(var/obj/screen/mov_intent/selector in hud_used.static_inventory)
-			selector.update_icon(src)

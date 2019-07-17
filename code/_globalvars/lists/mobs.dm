@@ -30,3 +30,19 @@ GLOBAL_LIST_INIT(sec_hud_users, list())
 GLOBAL_LIST_INIT(antag_hud_users, list())
 GLOBAL_LIST_INIT(surgeries_list, list())
 GLOBAL_LIST_INIT(hear_radio_list, list())			//Mobs that hear the radio even if there's no client
+GLOBAL_LIST_EMPTY(mob_config_movespeed_type_lookup)
+
+/proc/update_config_movespeed_type_lookup(update_mobs = TRUE)
+	var/list/movespeeds = list()
+	var/value = 0
+	for(var/paths in config.multiplicative_movespeeds)
+		value = config.multiplicative_movespeeds[paths]
+		for(var/P in typesof(paths))
+			movespeeds[P] = value
+	GLOB.mob_config_movespeed_type_lookup = movespeeds
+	if(update_mobs)
+		update_mob_config_movespeeds()
+/proc/update_mob_config_movespeeds()
+	for(var/i in GLOB.mob_list)
+		var/mob/M = i
+		M.update_config_movespeed()

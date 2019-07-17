@@ -690,6 +690,7 @@ proc/dd_sortedObjectList(list/incoming)
 #define LAZYADD(L, I) if(!L) { L = list(); } L += I;
 #define LAZYACCESS(L, I) (L ? (isnum(I) ? (I > 0 && I <= L.len ? L[I] : null) : L[I]) : null)
 #define LAZYLEN(L) length(L)
+#define LAZYSET(L, K, V) if(!L) { L = list(); } L[K] = V;
 #define LAZYCLEARLIST(L) if(L) L.Cut()
 
 // LAZYING PT 2: THE LAZENING

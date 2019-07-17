@@ -5,6 +5,11 @@
  /* Get the direction of startObj relative to endObj.
   * Return values: To the right, 1. Below, 2. To the left, 3. Above, 4. Not found adjacent in cardinal directions, 0.
   */
+  
+  //datum may be null, but it does need to be a typed var
+#define NAMEOF(datum, X) (list(##datum.##X, #X)[2])
+
+
 /proc/getRelativeDirection(var/atom/movable/startObj, var/atom/movable/endObj)
 	if(endObj.x == startObj.x + 1 && endObj.y == startObj.y)
 		return EAST

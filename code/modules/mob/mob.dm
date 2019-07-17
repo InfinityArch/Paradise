@@ -33,7 +33,9 @@
 		GLOB.living_mob_list += src
 	set_focus(src)
 	prepare_huds()
-	..()
+	. = ..()
+	update_config_movespeed()
+	update_movespeed(TRUE)
 
 /atom/proc/prepare_huds()
 	hud_list = list()
@@ -168,9 +170,6 @@
 	for(var/mob/M in GLOB.mob_list)
 		if(M.real_name == text("[]", msg))
 			return M
-	return 0
-
-/mob/proc/movement_delay()
 	return 0
 
 /mob/proc/Life(seconds, times_fired)
@@ -1029,6 +1028,7 @@ var/list/slot_equipment_priority = list( \
 		if("holdervar")
 			statpanel(S.panel,"[S.holder_var_type] [S.holder_var_amount]",S)
 
+#define MOB_FACE_DIRECTION_DELAY 1
 // facing verbs
 /mob/proc/canface()
 	if(!canmove)						return 0
@@ -1048,7 +1048,7 @@ var/list/slot_equipment_priority = list( \
 	if(!canface())
 		return 0
 	setDir(ndir)
-	client.move_delay += movement_delay()
+	client.last_turn = world.time + MOB_FACE_DIRECTION_DELAY
 	return 1
 
 

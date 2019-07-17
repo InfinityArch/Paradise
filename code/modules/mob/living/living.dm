@@ -858,25 +858,6 @@
 		visible_message("<span class='notice'>[user] butchers [src].</span>")
 		gib()
 
-/mob/living/movement_delay(ignorewalk = 0)
-	. = ..()
-	if(isturf(loc))
-		var/turf/T = loc
-		. += T.slowdown
-	if(slowed)
-		. += 10
-	if(ignorewalk)
-		. += config.run_speed
-	else
-		switch(m_intent)
-			if(MOVE_INTENT_RUN)
-				if(drowsyness > 0)
-					. += 6
-				. += config.run_speed
-			if(MOVE_INTENT_WALK)
-				. += config.walk_speed
-
-
 /mob/living/proc/can_use_guns(var/obj/item/gun/G)
 	if(G.trigger_guard != TRIGGER_GUARD_ALLOW_ALL && !IsAdvancedToolUser() && !issmall(src))
 		to_chat(src, "<span class='warning'>You don't have the dexterity to do this!</span>")

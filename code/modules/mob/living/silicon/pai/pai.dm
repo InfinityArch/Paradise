@@ -83,7 +83,6 @@
 
 	var/current_pda_messaging = null
 	var/custom_sprite = 0
-	var/slowdown = 0
 
 /mob/living/silicon/pai/New(var/obj/item/paicard)
 	loc = paicard
@@ -123,13 +122,6 @@
 	securityActive1 = null
 	securityActive2 = null
 	return ..()
-
-
-/mob/living/silicon/pai/movement_delay()
-	. = ..()
-	. += slowdown
-	. += 1 //A bit slower than humans, so they're easier to smash
-	. += config.robot_delay
 
 /mob/living/silicon/pai/update_icons()
 	if(stat == DEAD)

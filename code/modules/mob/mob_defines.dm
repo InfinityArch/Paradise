@@ -60,7 +60,11 @@
 	var/timeofdeath = 0.0//Living
 	var/cpr_time = 1.0//Carbon
 
-
+	//MOVEMENT SPEED
+	var/list/movespeed_modification				//Lazy list, see mob_movespeed.dm
+	var/cached_multiplicative_slowdown
+	/////////////////
+	
 	var/bodytemperature = 310.055	//98.7 F
 	var/flying = 0
 	var/charges = 0.0
